@@ -260,7 +260,7 @@ Fail2Ban是一个强大而灵活的安全工具，通过日志分析和自动响
 **注意**：在README中设置图片宽高，您可以使用HTML语法而不是Markdown语法：
 
 ```html
-<img src="img/451759627900_.pic.jpg" width="600" height="400" alt="描述文本">
+<img src="img/451759627900_.pic.jpg" width="400" height="600" alt="描述文本">
 ```
 
 或者使用HTML属性和样式：
