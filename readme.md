@@ -180,4 +180,4 @@ make help
 如果您遇到任何问题，请创建一个 Issue 或查看文档。
 
 
-<img src="img/451759627900_.pic.jpg" width="600" height="400" alt="描述文本">
+<img src="img/451759627900_.pic.jpg" width="400" height="600" alt="描述文本">
