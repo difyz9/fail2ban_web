@@ -1,0 +1,68 @@
+# Go 构建文件
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+build/
+dist/
+
+# Go 依赖文件
+go.work
+go.work.sum
+
+# 编辑器文件
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 操作系统生成的文件
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 日志文件
+*.log
+logs/
+
+# 数据库文件
+*.db
+*.sqlite
+*.sqlite3
+
+# 环境变量文件
+.env
+.env.local
+.env.*.local
+
+# 临时文件
+tmp/
+temp/
+
+# 数据目录
+data/
+
+# Air 热重载工具
+tmp/
+
+# 覆盖率文件
+*.cover
+coverage.txt
+
+# Backup files
+*.bak
+*.backup
+
+# 测试缓存
+.testcache/
+
+# 性能分析文件
+*.pprof

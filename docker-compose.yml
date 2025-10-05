@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  fail2ban-web:
+    build: .
+    container_name: fail2ban-web
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/data
+      - /var/log:/var/log:ro
+      - /etc/fail2ban:/etc/fail2ban:ro
+    environment:
+      - GIN_MODE=release
+      - DB_PATH=/data/fail2ban_web.db
+      - JWT_SECRET=your-secret-key-change-this-in-production
+    restart: unless-stopped
+    networks:
+      - fail2ban-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  fail2ban-network:
+    driver: bridge
+
+volumes:
+  data:
+    driver: local

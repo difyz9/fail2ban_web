@@ -1,0 +1,64 @@
+# Fail2Ban优化配置
+# 保存为 /etc/fail2ban/jail.local
+
+[DEFAULT]
+# 基础封禁时间: 1小时
+bantime = 3600
+
+# 查找时间窗口: 10分钟
+findtime = 600
+
+# 最大重试次数: 3次
+maxretry = 3
+
+# 启用递增封禁时间
+bantime.increment = true
+
+# 封禁时间倍增因子
+bantime.factor = 2
+
+# 最大封禁时间: 24小时
+bantime.maxtime = 86400
+
+# 忽略本地IP
+ignoreip = 127.0.0.1/8 ::1 192.168.0.0/16 10.0.0.0/8 172.16.0.0/12
+
+# 封禁动作
+banaction = iptables-multiport
+banaction_allports = iptables-allports
+
+[sshd]
+enabled = true
+port = ssh
+filter = sshd
+logpath = /var/log/auth.log
+maxretry = 3
+bantime = 3600
+
+# SSH暴力破解检测
+[sshd-ddos]
+enabled = true
+port = ssh
+filter = sshd-ddos
+logpath = /var/log/auth.log
+maxretry = 2
+bantime = 7200
+
+# 无效用户检测
+[sshd-invaliduser]
+enabled = true
+port = ssh
+filter = sshd
+logpath = /var/log/auth.log
+maxretry = 1
+bantime = 86400
+
+# 防止密码喷洒攻击
+[sshd-password-spray]
+enabled = true
+port = ssh
+filter = sshd
+logpath = /var/log/auth.log
+findtime = 3600
+maxretry = 10
+bantime = 86400
