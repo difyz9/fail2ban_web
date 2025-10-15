@@ -149,8 +149,8 @@ get-version:
 	@git tag --sort=-v:refname | head -1 || echo "v0.0.0"
 
 # 自动版本递增并推送 tag
-.PHONY: tag-push
-tag-push:
+.PHONY: tpush
+tpush:
 	@echo "获取当前最新版本..."
 	@CURRENT_TAG=$$(git tag --sort=-v:refname | head -1 || echo "v0.0.0"); \
 	echo "当前版本: $$CURRENT_TAG"; \
@@ -283,7 +283,7 @@ help:
 	@echo ""
 	@echo "🏷️  版本标签管理:"
 	@echo "  get-version       - 获取当前版本号"
-	@echo "  tag-push          - 自动递增补丁版本号并推送 (v0.0.X)"
+	@echo "  tpush          - 自动递增补丁版本号并推送 (v0.0.X)"
 	@echo "  tag-minor         - 自动递增次版本号并推送 (v0.X.0)"
 	@echo "  tag-major         - 自动递增主版本号并推送 (vX.0.0)"
 	@echo "  release           - 快速发布（自动递增补丁版本）"

@@ -49,6 +49,7 @@ temp/
 
 # 数据目录
 data/
+crypto-wallet-backend/
 
 # Air 热重载工具
 tmp/

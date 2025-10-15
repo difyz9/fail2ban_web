@@ -8,6 +8,8 @@ require (
 	github.com/oschwald/geoip2-golang v1.13.0
 	github.com/oschwald/geoip2-golang/v2 v2.0.0-beta.4
 	github.com/sirupsen/logrus v1.9.3
+	go.uber.org/fx v1.20.1
+	go.uber.org/zap v1.26.0
 	gorm.io/driver/sqlite v1.5.4
 	gorm.io/gorm v1.25.5
 )
@@ -36,6 +38,8 @@ require (
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
+	go.uber.org/dig v1.17.0 // indirect
+	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/arch v0.3.0 // indirect
 	golang.org/x/crypto v0.13.0 // indirect
 	golang.org/x/net v0.10.0 // indirect
