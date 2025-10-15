@@ -51,7 +51,6 @@ jobs:
         cp $PROJECT_NAME deploy/
         cp script/supervisor-deploy.sh deploy/
         cp .env deploy/
-        cp config.toml deploy/
         cp go.mod deploy/
         tar -czf deploy.tar.gz deploy/
 
@@ -91,7 +90,6 @@ jobs:
           sudo cp deploy/$PROJECT_NAME /app/$PROJECT_NAME/
           sudo cp deploy/supervisor-deploy.sh /app/$PROJECT_NAME/
           sudo cp deploy/go.mod /app/$PROJECT_NAME/
-          sudo cp deploy/config.toml /app/$PROJECT_NAME/
           sudo cp deploy/.env /app/$PROJECT_NAME/ || echo "Warning: .env file not found"
           sudo chmod +x /app/$PROJECT_NAME/$PROJECT_NAME
           sudo chmod +x /app/$PROJECT_NAME/supervisor-deploy.sh

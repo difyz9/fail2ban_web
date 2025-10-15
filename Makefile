@@ -137,6 +137,12 @@ dev:
 	@echo "启动热重载开发服务器..."
 	air
 
+g_push:
+	@echo "推送到远程仓库..."
+	git add .
+	git commit -m "Auto commit"
+	git push origin main
+
 # 生产构建
 .PHONY: build-prod
 build-prod:
