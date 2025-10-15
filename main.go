@@ -53,7 +53,9 @@ func main() {
 	defer intelligentService.Stop()
 
 	// 初始化中间件
-	authMiddleware := middleware.NewJWTMiddleware(cfg.JWT.Secret)
+	// authMiddleware := middleware.NewJWTMiddleware(cfg.JWT.Secret)
+
+
 
 	// 初始化handlers
 	authHandler := handler.NewAuthHandler(cfg)
