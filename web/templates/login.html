@@ -148,18 +148,24 @@
                     })
                 });
                 
-                const data = await response.json();
+                const result = await response.json();
                 
-                if (response.ok) {
-                    // 保存token
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('username', data.username);
+                if (response.ok && result.success) {
+                    // 统一响应格式: { success: true, data: { token, user, expires_at }, message }
+                    const { token, user, expires_at } = result.data;
+                    
+                    // 保存token和用户信息
+                    localStorage.setItem('token', token);
+                    localStorage.setItem('username', user.username);
+                    localStorage.setItem('user_role', user.role);
+                    localStorage.setItem('token_expires_at', expires_at);
                     
                     // 跳转到主页
                     window.location.href = '/';
                 } else {
                     // 显示错误信息
-                    document.getElementById('error-message').textContent = data.message || '登录失败';
+                    document.getElementById('error-message').textContent = 
+                        result.error || result.message || '登录失败';
                     errorAlert.classList.remove('d-none');
                 }
             } catch (error) {

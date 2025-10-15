@@ -24,15 +24,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // 初始化时获取用户信息
   useEffect(() => {
     const initAuth = async () => {
-      const token = Cookies.get('token');
+      const token = Cookies.get('auth_token'); // 修正：使用正确的 key
       if (token) {
         try {
           const userData = await authService.getProfile();
           setUser(userData);
         } catch (error) {
           console.error('Failed to get user profile:', error);
-          Cookies.remove('token');
-          Cookies.remove('refreshToken');
+          authService.clearAuthData(); // 使用 authService 的方法清除
         }
       }
       setLoading(false);

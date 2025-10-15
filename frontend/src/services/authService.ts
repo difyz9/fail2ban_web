@@ -50,7 +50,7 @@ class AuthService {
   // 刷新Token
   async refreshToken(): Promise<boolean> {
     try {
-      const response = await apiClient.post<{ token: string }>('/auth/refresh');
+      const response = await apiClient.post<{ token: string; expires_at: number }>('/auth/refresh');
       
       // 更新本地token
       Cookies.set(this.TOKEN_KEY, response.token, { 

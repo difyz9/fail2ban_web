@@ -97,13 +97,16 @@ func main() {
 	auth := api.Group("/auth")
 	{
 		auth.POST("/login", authHandler.Login)
-		auth.POST("/refresh", authMiddleware.JWTAuth(), authHandler.RefreshToken)
-		auth.GET("/profile", authMiddleware.JWTAuth(), authHandler.GetProfile)
+		// auth.POST("/refresh", authMiddleware.JWTAuth(), authHandler.RefreshToken)
+		// auth.GET("/profile", authMiddleware.JWTAuth(), authHandler.GetProfile)
+
+		auth.POST("/refresh",  authHandler.RefreshToken)
+		auth.GET("/profile", authHandler.GetProfile)
 	}
 
 	// 需要认证的API路由
 	authenticated := api.Group("")
-	authenticated.Use(authMiddleware.JWTAuth())
+	// authenticated.Use(authMiddleware.JWTAuth())
 	{
 		// 健康检查
 		authenticated.GET("/health", fail2banHandler.HealthCheck)

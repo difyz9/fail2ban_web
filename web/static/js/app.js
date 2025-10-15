@@ -56,6 +56,22 @@ class Fail2BanPanel {
         return response;
     }
 
+    // 处理统一响应格式
+    async handleApiResponse(response) {
+        if (!response || !response.ok) {
+            throw new Error('API请求失败');
+        }
+        
+        const result = await response.json();
+        
+        // 统一响应格式: { success: true, data: {...}, error: "", message: "" }
+        if (result.success) {
+            return result.data;
+        } else {
+            throw new Error(result.error || result.message || 'API请求失败');
+        }
+    }
+
     setupNavigation() {
         // 处理导航点击事件
         document.querySelectorAll('.nav-link').forEach(link => {
@@ -121,11 +137,7 @@ class Fail2BanPanel {
     async loadStats() {
         try {
             const response = await this.authenticatedFetch(`${this.baseURL}/stats`);
-            if (!response || !response.ok) {
-                throw new Error('获取统计数据失败');
-            }
-            
-            const stats = await response.json();
+            const stats = await this.handleApiResponse(response);
             
             document.getElementById('banned-count').textContent = stats.bannedCount || '0';
             document.getElementById('today-blocks').textContent = stats.todayBlocks || '0';
@@ -145,11 +157,7 @@ class Fail2BanPanel {
     async loadRecentBans() {
         try {
             const response = await this.authenticatedFetch(`${this.baseURL}/banned-ips?limit=10`);
-            if (!response || !response.ok) {
-                throw new Error('获取被禁IP列表失败');
-            }
-            
-            const data = await response.json();
+            const data = await this.handleApiResponse(response);
             const tableBody = document.querySelector('#recent-bans-table tbody');
             
             if (data.ips && data.ips.length > 0) {
@@ -179,11 +187,7 @@ class Fail2BanPanel {
     async loadSystemInfo() {
         try {
             const response = await this.authenticatedFetch(`${this.baseURL}/system-info`);
-            if (!response || !response.ok) {
-                throw new Error('获取系统信息失败');
-            }
-            
-            const info = await response.json();
+            const info = await this.handleApiResponse(response);
             
             document.getElementById('fail2ban-version').textContent = info.version || '未知';
             document.getElementById('uptime').textContent = this.formatUptime(info.uptime) || '未知';
@@ -238,11 +242,7 @@ class Fail2BanPanel {
     async refreshBannedIPs() {
         try {
             const response = await this.authenticatedFetch(`${this.baseURL}/banned-ips`);
-            if (!response || !response.ok) {
-                throw new Error('获取被禁IP列表失败');
-            }
-            
-            const data = await response.json();
+            const data = await this.handleApiResponse(response);
             const tableBody = document.querySelector('#banned-ips-table tbody');
             
             if (data.ips && data.ips.length > 0) {
@@ -284,10 +284,7 @@ class Fail2BanPanel {
                 })
             });
 
-            if (!response || !response.ok) {
-                throw new Error('解禁操作失败');
-            }
-
+            await this.handleApiResponse(response);
             this.showSuccess(`成功解禁IP: ${ip}`);
             
             // 刷新列表
@@ -474,11 +471,7 @@ class Fail2BanPanel {
     async refreshRules() {
         try {
             const response = await this.authenticatedFetch(`${this.baseURL}/jails`);
-            if (!response || !response.ok) {
-                throw new Error('获取规则列表失败');
-            }
-            
-            const data = await response.json();
+            const data = await this.handleApiResponse(response);
             const tableBody = document.querySelector('#jails-table tbody');
             
             if (data.jails && data.jails.length > 0) {
@@ -531,12 +524,8 @@ class Fail2BanPanel {
                 method: 'POST'
             });
 
-            if (!response || !response.ok) {
-                throw new Error('安装默认配置失败');
-            }
-
-            const result = await response.json();
-            this.showSuccess(result.message);
+            const result = await this.handleApiResponse(response);
+            this.showSuccess(result.message || '安装成功');
             
             // 刷新规则列表
             if (this.currentPage === 'rules') {
@@ -553,12 +542,7 @@ class Fail2BanPanel {
     async showDefaultConfigInfo() {
         try {
             const response = await this.authenticatedFetch(`${this.baseURL}/defaults/info`);
-
-            if (!response || !response.ok) {
-                throw new Error('获取配置信息失败');
-            }
-
-            const info = await response.json();
+            const info = await this.handleApiResponse(response);
             
             let modalContent = `
                 <div class="modal fade" id="configInfoModal" tabindex="-1">
@@ -643,12 +627,7 @@ class Fail2BanPanel {
     async exportNginxConfig() {
         try {
             const response = await this.authenticatedFetch(`${this.baseURL}/defaults/nginx/export`);
-
-            if (!response || !response.ok) {
-                throw new Error('导出配置失败');
-            }
-
-            const config = await response.json();
+            const config = await this.handleApiResponse(response);
             
             // 创建下载链接
             const dataStr = "data:text/plain;charset=utf-8," + encodeURIComponent(config.jail_config);
@@ -675,12 +654,8 @@ class Fail2BanPanel {
                 body: JSON.stringify({ enabled })
             });
 
-            if (!response || !response.ok) {
-                throw new Error('切换状态失败');
-            }
-
-            const result = await response.json();
-            this.showSuccess(result.message);
+            const result = await this.handleApiResponse(response);
+            this.showSuccess(result.message || '操作成功');
             
             // 刷新列表
             await this.refreshRules();
