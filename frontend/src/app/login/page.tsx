@@ -86,21 +86,21 @@ function LoginForm() {
 
         <div className="relative z-10 min-h-screen flex">
           {/* 左侧 - 品牌展示区域 */}
-          <div className="hidden lg:flex lg:flex-1 flex-col justify-center items-center px-12 text-white">
+          <div className="hidden lg:flex lg:w-2/5 xl:w-1/2 flex-col justify-center items-center px-12 xl:px-20 text-white">
             <motion.div 
-              className="max-w-lg text-center"
+              className="max-w-2xl"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
               {/* 主图标 */}
               <motion.div 
-                className="mb-8"
+                className="mb-12"
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
               >
-                <div className="w-32 h-32 mx-auto mb-6 relative">
+                <div className="w-40 h-40 mx-auto mb-8 relative">
                   <motion.div 
                     className="absolute inset-0 bg-gradient-to-br from-blue-400 to-purple-600 rounded-3xl shadow-2xl"
                     animate={{ rotate: [0, 3, -3, 0] }}
@@ -110,11 +110,11 @@ function LoginForm() {
                       ease: "easeInOut"
                     }}
                   />
-                  <div className="absolute inset-2 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl flex items-center justify-center">
-                    <Shield className="w-16 h-16 text-blue-400" />
+                  <div className="absolute inset-3 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl flex items-center justify-center">
+                    <Shield className="w-20 h-20 text-blue-400" />
                   </div>
                   <motion.div 
-                    className="absolute -top-2 -right-2 w-8 h-8 bg-green-400 rounded-full flex items-center justify-center"
+                    className="absolute -top-2 -right-2 w-10 h-10 bg-green-400 rounded-full flex items-center justify-center"
                     animate={{ scale: [1, 1.2, 1] }}
                     transition={{ 
                       duration: 2,
@@ -122,13 +122,13 @@ function LoginForm() {
                       ease: "easeInOut"
                     }}
                   >
-                    <CheckCircle2 className="w-5 h-5 text-white" />
+                    <CheckCircle2 className="w-6 h-6 text-white" />
                   </motion.div>
                 </div>
               </motion.div>
               
               <motion.h1 
-                className="text-5xl font-bold mb-4 bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent leading-tight"
+                className="text-6xl xl:text-7xl font-bold mb-6 bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent leading-tight"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.4 }}
@@ -136,7 +136,7 @@ function LoginForm() {
                 Fail2Ban
               </motion.h1>
               <motion.h2 
-                className="text-2xl font-semibold mb-6 text-blue-200"
+                className="text-3xl xl:text-4xl font-semibold mb-8 text-blue-200"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.6 }}
@@ -144,7 +144,7 @@ function LoginForm() {
                 安全防护管理面板
               </motion.h2>
               <motion.p 
-                className="text-lg text-blue-100 leading-relaxed mb-12"
+                className="text-xl xl:text-2xl text-blue-100 leading-relaxed mb-16"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.8 }}
@@ -153,33 +153,64 @@ function LoginForm() {
                 <br />
                 <span className="text-purple-200">智能监控 • 实时防护 • 安全管理</span>
               </motion.p>
+              
+              {/* 特性列表 */}
+              <motion.div
+                className="grid grid-cols-2 gap-6 mt-12"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 1 }}
+              >
+                {[
+                  { icon: Shield, label: '实时防护', desc: '24/7 监控' },
+                  { icon: Eye, label: '智能分析', desc: '威胁检测' },
+                  { icon: CheckCircle2, label: '自动拦截', desc: '恶意访问' },
+                  { icon: KeyRound, label: '安全管理', desc: '集中控制' }
+                ].map((feature, index) => (
+                  <motion.div
+                    key={feature.label}
+                    className="flex items-start space-x-3"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4, delay: 1 + index * 0.1 }}
+                  >
+                    <div className="flex-shrink-0 w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                      <feature.icon className="w-6 h-6 text-blue-300" />
+                    </div>
+                    <div>
+                      <div className="text-white font-semibold text-lg">{feature.label}</div>
+                      <div className="text-blue-200 text-sm">{feature.desc}</div>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
             </motion.div>
           </div>
 
           {/* 右侧 - 登录表单 */}
-          <div className="flex-1 lg:flex-none lg:w-96 xl:w-[480px] flex items-center justify-center px-6 py-12">
+          <div className="flex-1 lg:w-3/5 xl:w-1/2 flex items-center justify-center px-8 py-12 lg:px-16 xl:px-24">
             <motion.div 
-              className="w-full max-w-sm"
+              className="w-full max-w-[450px]"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden relative">
-                <div className="relative z-10 p-8">
+              <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden h-[600px] flex flex-col">
+                <div className="relative z-10 p-8 flex-1 flex flex-col overflow-y-auto">
                   {/* 表单头部 */}
                   <motion.div 
-                    className="text-center mb-8"
+                    className="mb-6"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 0.2 }}
                   >
-                    <div className="flex justify-center mb-4">
-                      <div className="p-3 bg-blue-100/80 rounded-2xl">
-                        <KeyRound className="h-8 w-8 text-blue-600" />
+                    <div className="flex items-center mb-4">
+                      <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
+                        <KeyRound className="h-7 w-7 text-white" />
                       </div>
                     </div>
-                    <h2 className="text-3xl font-bold text-gray-900 mb-2">欢迎回来</h2>
-                    <p className="text-gray-600">请登录您的管理账户</p>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">欢迎回来</h2>
+                    <p className="text-gray-600 text-sm">请登录您的管理账户以继续</p>
                   </motion.div>
 
                   {/* 错误提示 */}
@@ -197,7 +228,7 @@ function LoginForm() {
 
                   {/* 登录表单 */}
                   <motion.form 
-                    className="space-y-6" 
+                    className="space-y-5" 
                     onSubmit={handleSubmit}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -205,7 +236,7 @@ function LoginForm() {
                   >
                     {/* 用户名输入框 */}
                     <div className="space-y-2">
-                      <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="username" className="block text-xs font-semibold text-gray-700">
                         用户名
                       </label>
                       <div className="relative group">
@@ -219,7 +250,7 @@ function LoginForm() {
                           required
                           value={formData.username}
                           onChange={handleChange}
-                          className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          className="block w-full pl-11 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                           placeholder="请输入用户名"
                         />
                       </div>
@@ -227,7 +258,7 @@ function LoginForm() {
 
                     {/* 密码输入框 */}
                     <div className="space-y-2">
-                      <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="password" className="block text-xs font-semibold text-gray-700">
                         密码
                       </label>
                       <div className="relative group">
@@ -241,7 +272,7 @@ function LoginForm() {
                           required
                           value={formData.password}
                           onChange={handleChange}
-                          className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          className="block w-full pl-11 pr-11 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                           placeholder="请输入密码"
                         />
                         <button
@@ -250,78 +281,72 @@ function LoginForm() {
                           onClick={() => setShowPassword(!showPassword)}
                         >
                           {showPassword ? (
-                            <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                            <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600 transition-colors" />
                           ) : (
-                            <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                            <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600 transition-colors" />
                           )}
                         </button>
                       </div>
                     </div>
 
-                    {/* 记住我 */}
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        name="rememberMe"
-                        checked={formData.rememberMe}
-                        onChange={handleChange}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <span className="ml-2 text-sm text-gray-600">记住我</span>
+                    {/* 记住我和忘记密码 */}
+                    <div className="flex items-center justify-between text-xs">
+                      <label className="flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          name="rememberMe"
+                          checked={formData.rememberMe}
+                          onChange={handleChange}
+                          className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        />
+                        <span className="ml-2 font-medium text-gray-700">记住我</span>
+                      </label>
+                      <button 
+                        type="button"
+                        className="font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                      >
+                        忘记密码？
+                      </button>
                     </div>
 
                     {/* 登录按钮 */}
                     <motion.button
                       type="submit"
                       disabled={loading}
-                      className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-lg hover:from-purple-600 hover:to-pink-600 font-medium text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
-                      whileHover={{ scale: loading ? 1 : 1.02 }}
+                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 font-semibold text-sm shadow-lg shadow-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                      whileHover={{ scale: loading ? 1 : 1.02, boxShadow: loading ? undefined : '0 10px 25px rgba(59, 130, 246, 0.4)' }}
                       whileTap={{ scale: loading ? 1 : 0.98 }}
                     >
                       {loading ? (
                         <div className="flex items-center justify-center">
                           <motion.div 
-                            className="w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-3"
+                            className="w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"
                             animate={{ rotate: 360 }}
                             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                           />
                           登录中...
                         </div>
                       ) : (
-                        '登录'
+                        <span className="flex items-center justify-center">
+                          登录到控制面板
+                          <motion.span
+                            className="ml-2"
+                            initial={{ x: 0 }}
+                            animate={{ x: [0, 4, 0] }}
+                            transition={{ duration: 1.5, repeat: Infinity }}
+                          >
+                            →
+                          </motion.span>
+                        </span>
                       )}
                     </motion.button>
                   </motion.form>
 
-                  {/* 默认登录信息提示 */}
-                  <motion.div 
-                    className="mt-8"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.8 }}
-                  >
-                    <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 border border-blue-100">
-                      <div className="flex items-center justify-center mb-3">
-                        <CheckCircle2 className="w-5 h-5 text-green-500 mr-2" />
-                        <span className="font-semibold text-gray-700">默认登录信息</span>
-                      </div>
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-gray-600 font-medium">用户名:</span>
-                          <code className="bg-white border border-gray-200 rounded-lg px-3 py-1 text-gray-800 font-mono text-sm font-semibold">admin</code>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-gray-600 font-medium">密码:</span>
-                          <code className="bg-white border border-gray-200 rounded-lg px-3 py-1 text-gray-800 font-mono text-sm font-semibold">admin123</code>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
 
                   {/* 版权信息 */}
-                  <div className="mt-6 text-center">
-                    <p className="text-xs text-gray-400">
-                      © 2025 Fail2Ban 安全管理面板. 保留所有权利.
+                  <div className="mt-4 text-center flex-shrink-0">
+                    <p className="text-xs text-gray-500">
+                      © 2025 Fail2Ban 安全管理面板
                     </p>
                   </div>
                 </div>
