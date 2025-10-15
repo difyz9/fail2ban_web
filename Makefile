@@ -143,6 +143,103 @@ g_push:
 	git commit -m "Auto commit"
 	git push origin main
 
+# 获取当前版本号
+.PHONY: get-version
+get-version:
+	@git tag --sort=-v:refname | head -1 || echo "v0.0.0"
+
+# 自动版本递增并推送 tag
+.PHONY: tag-push
+tag-push:
+	@echo "获取当前最新版本..."
+	@CURRENT_TAG=$$(git tag --sort=-v:refname | head -1 || echo "v0.0.0"); \
+	echo "当前版本: $$CURRENT_TAG"; \
+	VERSION=$${CURRENT_TAG#v}; \
+	IFS='.' read -r MAJOR MINOR PATCH <<< "$$VERSION"; \
+	NEW_PATCH=$$((PATCH + 1)); \
+	NEW_TAG="v$$MAJOR.$$MINOR.$$NEW_PATCH"; \
+	echo "新版本: $$NEW_TAG"; \
+	read -p "请输入提交信息 (默认: Release $$NEW_TAG): " COMMIT_MSG; \
+	COMMIT_MSG=$${COMMIT_MSG:-"Release $$NEW_TAG"}; \
+	echo "创建标签: $$NEW_TAG"; \
+	git tag -a $$NEW_TAG -m "$$COMMIT_MSG"; \
+	echo "推送标签到远程仓库..."; \
+	git push origin $$NEW_TAG; \
+	echo "✅ 版本 $$NEW_TAG 已成功推送!"
+
+# 自动版本递增（主版本号）
+.PHONY: tag-major
+tag-major:
+	@echo "获取当前最新版本..."
+	@CURRENT_TAG=$$(git tag --sort=-v:refname | head -1 || echo "v0.0.0"); \
+	echo "当前版本: $$CURRENT_TAG"; \
+	VERSION=$${CURRENT_TAG#v}; \
+	IFS='.' read -r MAJOR MINOR PATCH <<< "$$VERSION"; \
+	NEW_MAJOR=$$((MAJOR + 1)); \
+	NEW_TAG="v$$NEW_MAJOR.0.0"; \
+	echo "新版本: $$NEW_TAG"; \
+	read -p "请输入提交信息 (默认: Release $$NEW_TAG): " COMMIT_MSG; \
+	COMMIT_MSG=$${COMMIT_MSG:-"Release $$NEW_TAG"}; \
+	echo "创建标签: $$NEW_TAG"; \
+	git tag -a $$NEW_TAG -m "$$COMMIT_MSG"; \
+	echo "推送标签到远程仓库..."; \
+	git push origin $$NEW_TAG; \
+	echo "✅ 版本 $$NEW_TAG 已成功推送!"
+
+# 自动版本递增（次版本号）
+.PHONY: tag-minor
+tag-minor:
+	@echo "获取当前最新版本..."
+	@CURRENT_TAG=$$(git tag --sort=-v:refname | head -1 || echo "v0.0.0"); \
+	echo "当前版本: $$CURRENT_TAG"; \
+	VERSION=$${CURRENT_TAG#v}; \
+	IFS='.' read -r MAJOR MINOR PATCH <<< "$$VERSION"; \
+	NEW_MINOR=$$((MINOR + 1)); \
+	NEW_TAG="v$$MAJOR.$$NEW_MINOR.0"; \
+	echo "新版本: $$NEW_TAG"; \
+	read -p "请输入提交信息 (默认: Release $$NEW_TAG): " COMMIT_MSG; \
+	COMMIT_MSG=$${COMMIT_MSG:-"Release $$NEW_TAG"}; \
+	echo "创建标签: $$NEW_TAG"; \
+	git tag -a $$NEW_TAG -m "$$COMMIT_MSG"; \
+	echo "推送标签到远程仓库..."; \
+	git push origin $$NEW_TAG; \
+	echo "✅ 版本 $$NEW_TAG 已成功推送!"
+
+# 快速发布（自动递增补丁版本，不询问提交信息）
+.PHONY: release
+release:
+	@echo "🚀 快速发布新版本..."
+	@CURRENT_TAG=$$(git tag --sort=-v:refname | head -1 || echo "v0.0.0"); \
+	echo "当前版本: $$CURRENT_TAG"; \
+	VERSION=$${CURRENT_TAG#v}; \
+	IFS='.' read -r MAJOR MINOR PATCH <<< "$$VERSION"; \
+	NEW_PATCH=$$((PATCH + 1)); \
+	NEW_TAG="v$$MAJOR.$$MINOR.$$NEW_PATCH"; \
+	echo "新版本: $$NEW_TAG"; \
+	git tag -a $$NEW_TAG -m "Release $$NEW_TAG"; \
+	git push origin $$NEW_TAG; \
+	echo "✅ 版本 $$NEW_TAG 已成功推送!"
+
+# 查看所有标签
+.PHONY: list-tags
+list-tags:
+	@echo "所有版本标签："
+	@git tag --sort=-v:refname
+
+# 删除本地标签
+.PHONY: delete-tag
+delete-tag:
+	@read -p "请输入要删除的标签名称: " TAG_NAME; \
+	git tag -d $$TAG_NAME; \
+	echo "本地标签 $$TAG_NAME 已删除"
+
+# 删除远程标签
+.PHONY: delete-tag-remote
+delete-tag-remote:
+	@read -p "请输入要删除的远程标签名称: " TAG_NAME; \
+	git push origin --delete $$TAG_NAME; \
+	echo "远程标签 $$TAG_NAME 已删除"
+
 # 生产构建
 .PHONY: build-prod
 build-prod:
@@ -154,22 +251,48 @@ build-prod:
 .PHONY: help
 help:
 	@echo "可用的命令："
+	@echo ""
+	@echo "📦 构建相关:"
 	@echo "  build         - 构建应用程序"
-	@echo "  run           - 运行应用程序"
-	@echo "  clean         - 清理构建文件"
-	@echo "  test          - 运行测试"
-	@echo "  deps          - 下载依赖"
-	@echo "  fmt           - 格式化代码"
-	@echo "  vet           - 代码检查"
 	@echo "  build-linux   - 构建 Linux 版本"
 	@echo "  build-windows - 构建 Windows 版本"
 	@echo "  build-darwin  - 构建 macOS 版本"
 	@echo "  build-all     - 构建所有平台版本"
+	@echo "  build-prod    - 生产环境构建"
+	@echo ""
+	@echo "🚀 运行相关:"
+	@echo "  run           - 运行应用程序"
+	@echo "  dev           - 热重载开发"
+	@echo ""
+	@echo "🧹 清理和测试:"
+	@echo "  clean         - 清理构建文件"
+	@echo "  test          - 运行测试"
+	@echo "  fmt           - 格式化代码"
+	@echo "  vet           - 代码检查"
+	@echo ""
+	@echo "📚 依赖管理:"
+	@echo "  deps          - 下载依赖"
+	@echo "  install-tools - 安装开发工具"
+	@echo ""
+	@echo "🐳 Docker 相关:"
 	@echo "  docker-build  - 构建 Docker 镜像"
 	@echo "  docker-run    - 运行 Docker 容器"
 	@echo "  docker-stop   - 停止 Docker 容器"
 	@echo "  compose-up    - 启动 Docker Compose"
 	@echo "  compose-down  - 停止 Docker Compose"
-	@echo "  dev           - 热重载开发"
-	@echo "  build-prod    - 生产环境构建"
+	@echo ""
+	@echo "🏷️  版本标签管理:"
+	@echo "  get-version       - 获取当前版本号"
+	@echo "  tag-push          - 自动递增补丁版本号并推送 (v0.0.X)"
+	@echo "  tag-minor         - 自动递增次版本号并推送 (v0.X.0)"
+	@echo "  tag-major         - 自动递增主版本号并推送 (vX.0.0)"
+	@echo "  release           - 快速发布（自动递增补丁版本）"
+	@echo "  list-tags         - 查看所有版本标签"
+	@echo "  delete-tag        - 删除本地标签"
+	@echo "  delete-tag-remote - 删除远程标签"
+	@echo ""
+	@echo "📝 Git 相关:"
+	@echo "  g_push        - 快速提交并推送"
+	@echo ""
+	@echo "❓ 其他:"
 	@echo "  help          - 显示帮助信息"
