@@ -5,6 +5,8 @@ go 1.24.1
 require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/golang-jwt/jwt/v5 v5.0.0
+	github.com/oschwald/geoip2-golang v1.13.0
+	github.com/oschwald/geoip2-golang/v2 v2.0.0-beta.4
 	github.com/sirupsen/logrus v1.9.3
 	gorm.io/driver/sqlite v1.5.4
 	gorm.io/gorm v1.25.5
@@ -29,7 +31,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/oschwald/geoip2-golang/v2 v2.0.0-beta.4 // indirect
+	github.com/oschwald/maxminddb-golang v1.13.0 // indirect
 	github.com/oschwald/maxminddb-golang/v2 v2.0.0-beta.9 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect

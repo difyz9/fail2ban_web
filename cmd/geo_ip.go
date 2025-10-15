@@ -9,13 +9,13 @@ import (
 )
 
 func main() {
-	db, err := geoip2.Open("GeoIP2-City.mmdb")
+	db, err := geoip2.Open("config/GeoLite2-City.mmdb")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 	// If you are using strings that may be invalid, use netip.ParseAddr and check for errors
-	ip, err := netip.ParseAddr("81.2.69.142")
+	ip, err := netip.ParseAddr("43.160.253.168")
 	if err != nil {
 		log.Fatal(err)
 	}
