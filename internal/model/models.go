@@ -6,6 +6,40 @@ import (
 	"gorm.io/gorm"
 )
 
+// ApiResponse 统一API响应格式
+type ApiResponse struct {
+	Success bool        `json:"success"`
+	Data    interface{} `json:"data,omitempty"`
+	Error   string      `json:"error,omitempty"`
+	Message string      `json:"message,omitempty"`
+}
+
+// NewSuccessResponse 创建成功响应
+func NewSuccessResponse(data interface{}, message ...string) ApiResponse {
+	msg := ""
+	if len(message) > 0 {
+		msg = message[0]
+	}
+	return ApiResponse{
+		Success: true,
+		Data:    data,
+		Message: msg,
+	}
+}
+
+// NewErrorResponse 创建错误响应
+func NewErrorResponse(error string, message ...string) ApiResponse {
+	msg := ""
+	if len(message) > 0 {
+		msg = message[0]
+	}
+	return ApiResponse{
+		Success: false,
+		Error:   error,
+		Message: msg,
+	}
+}
+
 // User 用户模型
 type User struct {
 	ID        uint           `json:"id" gorm:"primaryKey"`
