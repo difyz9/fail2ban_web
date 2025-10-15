@@ -86,9 +86,9 @@ function LoginForm() {
 
         <div className="relative z-10 min-h-screen flex">
           {/* 左侧 - 品牌展示区域 */}
-          <div className="hidden lg:flex lg:w-2/5 xl:w-1/2 flex-col justify-center items-center px-12 xl:px-20 text-white">
+          <div className="hidden lg:flex lg:w-[60%] flex-col justify-center items-center px-12 xl:px-20 text-white">
             <motion.div 
-              className="max-w-2xl"
+              className="max-w-3xl"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
@@ -188,7 +188,7 @@ function LoginForm() {
           </div>
 
           {/* 右侧 - 登录表单 */}
-          <div className="flex-1 lg:w-3/5 xl:w-1/2 flex items-center justify-center px-8 py-12 lg:px-16 xl:px-24">
+          <div className="flex-1 lg:w-[40%] flex items-center justify-center px-8 py-12 lg:px-12">
             <motion.div 
               className="w-full max-w-[450px]"
               initial={{ opacity: 0, x: 20 }}
