@@ -1,0 +1,106 @@
+name: Deploy to Server with Supervisor
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.24.1'
+
+
+  build-and-deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    environment: dev
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.24.1'
+
+    - name: Get project name
+      id: project
+      run: |
+        PROJECT_NAME=$(grep '^module ' go.mod | awk '{print $2}' | sed 's/.*\///')
+        echo "name=$PROJECT_NAME" >> $GITHUB_OUTPUT
+        echo "Project name: $PROJECT_NAME"
+
+    - name: Build application
+      run: |
+        go mod tidy
+        PROJECT_NAME="${{ steps.project.outputs.name }}"
+        CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o $PROJECT_NAME .
+
+    - name: Create deployment package
+      run: |
+        PROJECT_NAME="${{ steps.project.outputs.name }}"
+        mkdir -p deploy
+        cp $PROJECT_NAME deploy/
+        cp script/supervisor-deploy.sh deploy/
+        cp .env deploy/
+        cp config.toml deploy/
+        cp go.mod deploy/
+        tar -czf deploy.tar.gz deploy/
+
+    - name: Transfer files to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        port: ${{ secrets.SERVER_PORT }}
+        username: ${{ secrets.SERVER_USER }}
+        password: ${{ secrets.SERVER_PASSWORD }}
+        source: "deploy.tar.gz"
+        target: "/tmp/"
+
+    - name: Deploy with Supervisor
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        port: ${{ secrets.SERVER_PORT }}
+        username: ${{ secrets.SERVER_USER }}
+        password: ${{ secrets.SERVER_PASSWORD }}
+        script: |
+          # 解压部署包
+          cd /tmp
+          tar -xzf deploy.tar.gz
+          
+          # 获取项目名称
+          PROJECT_NAME=$(grep '^module ' /tmp/deploy/go.mod 2>/dev/null | awk '{print $2}' | sed 's/.*\///' || echo "golang-gin-demo")
+          echo "部署项目: $PROJECT_NAME"
+          
+          # 停止现有服务
+          sudo supervisorctl stop $PROJECT_NAME || true
+          
+          # 创建应用目录
+          sudo mkdir -p /app/$PROJECT_NAME
+          
+          # 复制文件
+          sudo cp deploy/$PROJECT_NAME /app/$PROJECT_NAME/
+          sudo cp deploy/supervisor-deploy.sh /app/$PROJECT_NAME/
+          sudo cp deploy/go.mod /app/$PROJECT_NAME/
+          sudo cp deploy/config.toml /app/$PROJECT_NAME/
+          sudo cp deploy/.env /app/$PROJECT_NAME/ || echo "Warning: .env file not found"
+          sudo chmod +x /app/$PROJECT_NAME/$PROJECT_NAME
+          sudo chmod +x /app/$PROJECT_NAME/supervisor-deploy.sh
+          
+          # 运行部署脚本
+          cd /app/$PROJECT_NAME
+          sudo ./supervisor-deploy.sh
+          
+          # 清理临时文件
+          rm -rf /tmp/deploy /tmp/deploy.tar.gz
+          
+          echo "Deployment completed successfully for project: $PROJECT_NAME"
