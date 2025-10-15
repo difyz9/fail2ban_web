@@ -96,7 +96,7 @@ if [[ ! -f "$ENV_FILE" ]]; then
     echo "创建环境配置文件..."
     cat > "$ENV_FILE" << EOF
 # 服务器配置
-PORT=8080
+PORT=8092
 HOST=0.0.0.0
 GIN_MODE=release
 
@@ -192,8 +192,8 @@ fi
 
 echo
 echo "=== 部署完成 ==="
-echo "服务地址: http://$(hostname -I | awk '{print $1}'):8080"
-echo "管理面板: http://$(hostname -I | awk '{print $1}'):8080/login"
+echo "服务地址: http://$(hostname -I | awk '{print $1}'):8092"
+echo "管理面板: http://$(hostname -I | awk '{print $1}'):8092/login"
 echo
 echo "管理命令:"
 echo "  查看状态: sudo systemctl status fail2ban-web"
@@ -202,7 +202,7 @@ echo "  重启服务: sudo systemctl restart fail2ban-web"
 echo "  停止服务: sudo systemctl stop fail2ban-web"
 echo
 echo "如需配置防火墙:"
-echo "  sudo ufw allow 8080"
+echo "  sudo ufw allow 8092"
 echo
 echo "如需修改配置，请编辑: $ENV_FILE"
 echo "修改后重启服务: sudo systemctl restart fail2ban-web"

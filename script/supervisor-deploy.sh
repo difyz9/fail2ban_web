@@ -96,10 +96,10 @@ supervisorctl status $PROJECT_NAME
 # 测试服务是否正常
 echo "测试服务健康状态..."
 for i in {1..30}; do
-    if curl -f http://localhost:8080/health &>/dev/null; then
+    if curl -f http://localhost:8092/health &>/dev/null; then
         echo "服务启动成功！"
-        echo "访问地址: http://$(hostname -I | awk '{print $1}'):8080"
-        echo "健康检查: http://$(hostname -I | awk '{print $1}'):8080/health"
+        echo "访问地址: http://$(hostname -I | awk '{print $1}'):8092"
+        echo "健康检查: http://$(hostname -I | awk '{print $1}'):8092/health"
         exit 0
     fi
     echo "等待服务启动... ($i/30)"

@@ -29,7 +29,7 @@ cd fail2ban_web
 部署完成后，脚本会显示：
 - **用户名**: admin
 - **密码**: (自动生成的安全密码)
-- **访问地址**: http://your-server-ip:8080
+- **访问地址**: http://your-server-ip:8092
 
 ## 🛠️ 管理命令
 
@@ -66,7 +66,7 @@ sudo journalctl -u fail2ban-web -n 50
 
 ```bash
 # 允许Web面板端口
-sudo ufw allow 8080
+sudo ufw allow 8092
 
 # 或使用Nginx反向代理 (推荐生产环境)
 sudo ufw allow 'Nginx Full'

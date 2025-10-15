@@ -50,7 +50,7 @@ type AdminConfig struct {
 func LoadConfig() *Config {
 	return &Config{
 		Server: ServerConfig{
-			Port: getEnv("PORT", "8080"),
+			Port: getEnv("PORT", "8092"),
 			Host: getEnv("HOST", "0.0.0.0"),
 			Mode: getEnv("GIN_MODE", "release"),
 		},

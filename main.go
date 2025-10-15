@@ -186,9 +186,9 @@ func main() {
 	}
 
 	// 启动服务器
-	log.Println("服务器启动在端口 :8080")
-	log.Println("访问 http://localhost:8080 打开管理面板")
-	if err := r.Run(":8080"); err != nil {
+	log.Println("服务器启动在端口 :8092")
+	log.Println("访问 http://localhost:8092 打开管理面板")
+	if err := r.Run(":8092"); err != nil {
 		log.Fatal("启动服务器失败:", err)
 	}
 }

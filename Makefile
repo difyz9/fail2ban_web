@@ -103,7 +103,7 @@ docker-build:
 .PHONY: docker-run
 docker-run:
 	@echo "运行 Docker 容器..."
-	docker run -d --name $(DOCKER_CONTAINER) -p 8080:8080 $(DOCKER_IMAGE)
+	docker run -d --name $(DOCKER_CONTAINER) -p 8092:8092 $(DOCKER_IMAGE)
 
 # Docker 停止
 .PHONY: docker-stop

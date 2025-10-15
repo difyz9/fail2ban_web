@@ -40,7 +40,7 @@ sudo chmod g+rw /var/run/fail2ban/fail2ban.sock
 
 ```bash
 # 服务器配置
-PORT=8080
+PORT=8092
 HOST=0.0.0.0
 GIN_MODE=release
 
@@ -136,7 +136,7 @@ server {
     server_name your-server-domain.com;
 
     location / {
-        proxy_pass http://127.0.0.1:8080;
+        proxy_pass http://127.0.0.1:8092;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -156,7 +156,7 @@ sudo systemctl reload nginx
 
 ```bash
 # 允许应用端口
-sudo ufw allow 8080
+sudo ufw allow 8092
 
 # 如果使用Nginx反向代理
 sudo ufw allow 'Nginx Full'

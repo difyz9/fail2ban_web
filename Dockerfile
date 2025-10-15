@@ -42,11 +42,11 @@ RUN mkdir -p /var/log/fail2ban /var/lib/fail2ban /etc/fail2ban
 RUN chown -R appuser:appgroup /root/
 
 # 暴露端口
-EXPOSE 8080
+EXPOSE 8092
 
 # 添加健康检查
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/api/v1/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8092/api/v1/health || exit 1
 
 # 切换到非root用户
 USER appuser
