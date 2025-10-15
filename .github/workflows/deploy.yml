@@ -16,12 +16,6 @@ jobs:
       with:
         go-version: '1.24.1'
 
-
-  build-and-deploy:
-    needs: test
-    runs-on: ubuntu-latest
-    environment: dev
-    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -42,7 +36,8 @@ jobs:
       run: |
         go mod tidy
         PROJECT_NAME="${{ steps.project.outputs.name }}"
-        CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o $PROJECT_NAME .
+        
+        CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -o $PROJECT_NAME .
 
     - name: Create deployment package
       run: |
