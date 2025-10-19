@@ -1,183 +1,161 @@
-# Fail2Ban 管理面板
+# fail2ban_web
 
-一个使用 Golang + Gin 框架构建的 Fail2Ban 管理面板，提供用户友好的 Web 界面来监控和管理 Fail2Ban 服务。
+一款用于可视化与管理 Fail2Ban 日志与封禁记录的轻量级 Web 管理工具（Go + Gin + GORM + SQLite）。
 
-当前还在开发中...
- 
-欢迎有兴趣的朋友一起参与完善！
+项目基于 geekai 的工程结构改造，使用 uber-go/fx 实现依赖注入，配置采用 TOML（参照 geekai 的 core/config.go 实现）。
 
+---
 
+## 关键特性
 
+- 基于 Go 的单二进制部署（Gin + fx）
+- 使用 GORM + SQLite 存储数据（轻量化，无外部 DB 依赖）
+- TOML 配置文件（`config.toml`）自动生成与加载
+- 简单的管理员认证（配置文件中定义 Admin 用户）
+- Web 前端（静态资源位于 `web/static`，模板在 `web/templates`）
+- 可通过 Docker 部署（仓库包含 `Dockerfile` 与 `docker-compose.yml`）
 
-## 功能特性
+---
 
-- 🔐 **用户认证**: JWT 基础的用户登录和权限管理
-- 📊 **实时监控**: 显示被禁IP地址、统计信息和系统状态
-- 🚫 **IP管理**: 查看、解禁被禁IP地址，手动添加禁止IP
-- ⚙️ **规则管理**: 管理 Fail2Ban jail 配置
-- 📝 **日志查看**: 查看和搜索 Fail2Ban 日志
-- 🐳 **容器化**: 支持 Docker 部署
-- 📱 **响应式设计**: 支持移动设备和桌面端
+## 目录结构（摘录）
 
-## 技术栈
+- `cmd/` - 工具与辅助命令
+- `core/` - 应用核心（AppServer、config、types 等）
+- `internal/handler/` - HTTP 处理器（登录、默认、nginx、ssh 等）
+- `internal/service/` - 业务服务层（jail、nginx、ssh、whitelist、user）
+- `web/` - 前端静态资源与模板
+- `Dockerfile`, `docker-compose.yml` - 容器化部署配置
 
-- **后端**: Golang, Gin 框架
-- **前端**: HTML5, CSS3, JavaScript (Bootstrap 5)
-- **数据库**: SQLite (GORM)
-- **认证**: JWT
-- **容器化**: Docker & Docker Compose
+---
 
-## 快速开始
+## 快速开始（本地）
 
-### 前置要求
+### 前置项
 
-- Go 1.21+
-- Fail2Ban 服务已安装并运行
-- Docker (可选，用于容器化部署)
+- Go 1.24+
+- (可选) Docker
 
-![](img/003.png)
+### 克隆仓库
 
-### 本地开发
-
-1. **克隆项目**
 ```bash
-git clone <repository-url>
+git clone <repo-url> fail2ban_web
 cd fail2ban_web
 ```
 
-2. **安装依赖**
-```bash
-make deps
-```
-
-3. **运行应用程序**
-```bash
-make run
-```
-
-4. **访问应用程序**
-打开浏览器访问 `http://localhost:8092`
-
-默认管理员账户：
-- 用户名: `admin`
-- 密码: `admin123`
-
-### Docker 部署
-
-1. **使用 Docker Compose (推荐)**
-```bash
-make compose-up
-```
-
-2. **或者使用 Docker**
-```bash
-make docker-build
-make docker-run
-```
-
-## 项目结构
-
-```
-fail2ban_web/
-├── cmd/                    # 应用程序入口
-│   └── main.go
-├── internal/               # 内部包
-│   ├── handler/           # HTTP 处理器
-│   ├── middleware/        # 中间件
-│   ├── model/            # 数据模型
-│   └── service/          # 业务逻辑
-├── web/                   # 前端资源
-│   ├── static/           # 静态文件 (CSS, JS)
-│   └── templates/        # HTML 模板
-├── config/               # 配置文件
-├── Dockerfile           # Docker 构建文件
-├── docker-compose.yml   # Docker Compose 配置
-├── Makefile            # 构建脚本
-└── go.mod              # Go 模块文件
-```
-
-## API 文档
-
-### 认证接口
-
-- `POST /api/v1/auth/login` - 用户登录
-- `POST /api/v1/auth/register` - 用户注册
-- `GET /api/v1/auth/profile` - 获取用户信息
-- `POST /api/v1/auth/refresh` - 刷新 Token
-
-### Fail2Ban 接口
-
-- `GET /api/v1/health` - 健康检查
-- `GET /api/v1/stats` - 获取统计信息
-- `GET /api/v1/system-info` - 获取系统信息
-- `GET /api/v1/banned-ips` - 获取被禁IP列表
-- `POST /api/v1/unban` - 解禁IP
-- `POST /api/v1/ban` - 手动禁止IP
-- `GET /api/v1/jails` - 获取jail列表
-- `GET /api/v1/logs` - 获取日志
-
-## 配置
-
-应用程序支持通过环境变量进行配置：
-
-| 变量名 | 默认值 | 描述 |
-|--------|---------|------|
-| `PORT` | `8092` | 服务器端口 |
-| `HOST` | `0.0.0.0` | 服务器地址 |
-| `GIN_MODE` | `release` | Gin 运行模式 |
-| `DB_PATH` | `./fail2ban_web.db` | 数据库文件路径 |
-| `JWT_SECRET` | `your-secret-key...` | JWT 密钥 |
-| `JWT_EXPIRE_TIME` | `24` | JWT 过期时间(小时) |
-| `FAIL2BAN_LOG_PATH` | `/var/log/fail2ban.log` | Fail2Ban 日志路径 |
-
-## 开发命令
+### 构建
 
 ```bash
-# 构建应用程序
-make build
-
-# 运行应用程序
-make run
-
-# 运行测试
-make test
-
-# 代码格式化
-make fmt
-
-# 热重载开发
-make dev
-
-# 构建所有平台版本
-make build-all
-
-# Docker 相关
-make docker-build
-make docker-run
-make compose-up
-
-# 查看所有可用命令
-make help
+go build -o fail2ban_web
 ```
 
-## 部署注意事项
+### 运行
 
-1. **权限要求**: 应用程序需要访问 Fail2Ban 命令行工具和日志文件的权限
-2. **网络安全**: 在生产环境中，请更改默认的 JWT 密钥
-3. **防火墙**: 确保 8092 端口在防火墙中已开放
-4. **SSL/TLS**: 生产环境建议使用反向代理 (Nginx) 配置 HTTPS
+首次运行会自动创建 `config.toml`：
 
-## 许可证
+```bash
+./fail2ban_web
+# 输出示例：
+# 2025/10/19 17:31:17 Loading config file: config.toml
+# 2025/10/19 17:31:17 Creating new config file: config.toml
+```
 
-本项目采用 MIT 许可证。详见 [LICENSE](LICENSE) 文件。
+程序默认监听 `:8092`，静态资源 URL 为 `http://localhost:8092/static`。
 
-## 贡献
+### 使用自定义配置文件
 
-欢迎提交 Issue 和 Pull Request！
+```bash
+CONFIG_FILE="production.toml" ./fail2ban_web
+```
 
-## 支持
+---
 
-如果您遇到任何问题，请创建一个 Issue 或查看文档。
+## 配置（`config.toml`）
 
+程序使用 TOML 文件作为配置，默认配置示例：
 
-<img src="img/451759627900_.pic.jpg" width="400" height="600" alt="描述文本">
+```toml
+Listen = ":8092"
+StaticDir = "./web/static"
+StaticURL = "http://localhost:8092/static"
+DBPath = "fail2ban_web.db"
+
+[Admin]
+  Username = "admin"
+  Password = "admin123"
+  Email = "admin@example.com"
+```
+
+敏感信息建议不要写入仓库，编辑后请确保权限设置合理：
+
+```bash
+chmod 600 config.toml
+```
+
+---
+
+## Docker 部署
+
+仓库包含 `Dockerfile` 与 `docker-compose.yml`，可以通过 Docker 快速部署：
+
+```bash
+# 使用本地构建镜像
+docker build -t fail2ban_web:latest .
+
+# 或者使用 docker-compose
+docker-compose up -d --build
+```
+
+注意：容器化部署时请将 `config.toml`、数据库文件与静态目录挂载到宿主机以保持持久化。
+
+---
+
+## 开发指南
+
+- 代码使用 fx 进行依赖注入，应用入口在 `main.go`。
+- 新增配置项请修改 `core/types.go` 的 `AppConfig` 并在 `core/config.go` 中处理默认值与保存。
+- 处理器位于 `internal/handler`，服务逻辑在 `internal/service`。
+- 前端模板位于 `web/templates`，静态资源在 `web/static`。
+
+---
+
+## 常见操作
+
+- 生成可执行文件：
+
+```bash
+go build -o fail2ban_web
+```
+
+- 查看日志：
+
+```bash
+# 直接运行时 stdout
+./fail2ban_web
+
+# 后台运行并查看日志（macOS / Linux）
+nohup ./fail2ban_web > fail2ban_web.log 2>&1 &
+tail -f fail2ban_web.log
+```
+
+- 删除配置并重置默认：
+
+```bash
+rm config.toml
+./fail2ban_web
+```
+
+---
+
+## 故障排查
+
+- 如果程序无法启动，先检查 `config.toml` 是否存在且 TOML 格式正确。
+- 检查数据库文件权限，确保进程有读写权限。
+- 若出现依赖问题，运行 `go mod tidy` 以补全模块。
+
+---
+
+## 贡献与许可
+
+欢迎提交 Issue 与 Pull Request。请在 PR 中描述变更及测试步骤。
+
+---
