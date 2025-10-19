@@ -2,21 +2,26 @@ package handler
 
 import (
 	"net/http"
+	"os"
 
-	"fail2ban-web/config"
+	"fail2ban-web/core"
 	"fail2ban-web/internal/middleware"
 	"fail2ban-web/internal/model"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type AuthHandler struct {
-	config *config.Config
+	BaseHandler
 }
 
-func NewAuthHandler(cfg *config.Config) *AuthHandler {
+func NewAuthHandler(app *core.AppServer, db *gorm.DB) *AuthHandler {
 	return &AuthHandler{
-		config: cfg,
+		BaseHandler: BaseHandler{
+			App: app,
+			DB:  db,
+		},
 	}
 }
 
@@ -31,8 +36,11 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	// 验证用户名和密码
-	if req.Username != h.config.Admin.Username || req.Password != h.config.Admin.Password {
+	// 验证用户名和密码（临时使用环境变量或默认值）
+	adminUser := getEnvOrDefault("ADMIN_USERNAME", "admin")
+	adminPass := getEnvOrDefault("ADMIN_PASSWORD", "admin")
+	
+	if req.Username != adminUser || req.Password != adminPass {
 		c.JSON(http.StatusUnauthorized, model.NewErrorResponse(
 			"invalid_credentials",
 			"Invalid username or password",
@@ -51,10 +59,11 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	// 创建用户对象（用于响应）
+	adminEmail := getEnvOrDefault("ADMIN_EMAIL", "admin@example.com")
 	user := model.User{
 		ID:       1,
-		Username: h.config.Admin.Username,
-		Email:    h.config.Admin.Email,
+		Username: adminUser,
+		Email:    adminEmail,
 		Role:     "admin",
 		IsActive: true,
 	}
@@ -80,10 +89,11 @@ func (h *AuthHandler) GetProfile(c *gin.Context) {
 	}
 
 	// 返回管理员用户信息
+	adminEmail := getEnvOrDefault("ADMIN_EMAIL", "admin@example.com")
 	user := model.User{
 		ID:       1,
 		Username: username.(string),
-		Email:    h.config.Admin.Email,
+		Email:    adminEmail,
 		Role:     "admin",
 		IsActive: true,
 	}
@@ -136,4 +146,12 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, model.NewSuccessResponse(data, "Token refreshed successfully"))
+}
+
+// getEnvOrDefault 获取环境变量，如果不存在则返回默认值
+func getEnvOrDefault(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
 }
