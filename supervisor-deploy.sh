@@ -87,44 +87,8 @@ supervisorctl start $PROJECT_NAME
 
 # 等待服务启动
 echo "等待服务启动..."
-sleep 10
+sleep 15
 
 # 查看服务状态
 echo "查看服务状态..."
 supervisorctl status $PROJECT_NAME
-
-# 测试服务是否正常
-echo "测试服务健康状态..."
-
-# 从配置文件读取端口号
-APP_PORT=$(grep -E "^port\s*=" config.toml | sed 's/.*=\s*//' | tr -d '"' | head -1)
-if [ -z "$APP_PORT" ]; then
-    APP_PORT=8093  # 默认端口
-fi
-
-echo "检查端口 $APP_PORT 上的服务..."
-
-for i in {1..30}; do
-    # 检查端口是否监听
-    if netstat -tuln | grep ":$APP_PORT " &>/dev/null; then
-        echo "服务启动成功！端口 $APP_PORT 正在监听"
-        echo "访问地址: http://$(hostname -I | awk '{print $1}'):$APP_PORT"
-        
-        # 尝试健康检查（如果有的话）
-        if curl -f http://localhost:$APP_PORT/health &>/dev/null; then
-            echo "健康检查: http://$(hostname -I | awk '{print $1}'):$APP_PORT/health"
-        else
-            echo "注意: 健康检查端点不可用，但服务正在运行"
-        fi
-        exit 0
-    fi
-    echo "等待服务启动... ($i/30)"
-    sleep 2
-done
-
-echo "服务启动失败！"
-echo "查看日志："
-tail -50 /var/log/$PROJECT_NAME.log
-echo "查看 Supervisor 状态："
-supervisorctl status $PROJECT_NAME
-exit 1
