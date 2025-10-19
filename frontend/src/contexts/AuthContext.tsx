@@ -37,7 +37,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     };
 
-    initAuth();
+    // 添加超时保护，确保 loading 状态不会永久卡住
+    const timeout = setTimeout(() => {
+      setLoading(false);
+    }, 3000); // 3秒超时
+
+    initAuth().finally(() => {
+      clearTimeout(timeout);
+    });
+
+    return () => clearTimeout(timeout);
   }, []);
 
   // 自动刷新 token

@@ -21,7 +21,7 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-//go:embed web
+//go:embed all:web
 var staticFiles embed.FS
 
 // AppLifecycle 应用程序生命周期

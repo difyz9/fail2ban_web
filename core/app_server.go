@@ -119,30 +119,53 @@ func setupStaticFiles(r *gin.Engine, staticFiles embed.FS) {
 			log.Fatal("Failed to load web files:", err)
 		}
 		
-		// 服务 _next 静态资源
-		r.StaticFS("/_next", http.FS(webFS))
-		
-		// 服务所有 HTML 和其他静态文件
+		// 使用 NoRoute 处理所有静态文件请求（包括 _next, HTML, 图片等）
 		r.NoRoute(func(c *gin.Context) {
 			path := c.Request.URL.Path
+			
+			log.Printf("[DEBUG] NoRoute handling: %s", path)
 			
 			// 默认路径指向 index.html
 			if path == "/" {
 				path = "/index.html"
-			} else if path[len(path)-1] == '/' {
-				path = path + "index.html"
+			} else if len(path) > 1 && path[len(path)-1] == '/' {
+				// 移除尾部斜杠，尝试访问同名 HTML 文件
+				path = path[:len(path)-1] + ".html"
 			} else {
-				// 尝试添加 .html 后缀
+				// 尝试多种文件路径
+				// 1. 原始路径
 				if _, err := fs.Stat(webFS, path[1:]); err != nil {
+					log.Printf("[DEBUG] File not found (original): %s, error: %v", path[1:], err)
+					// 2. 添加 .html 后缀
 					if _, err := fs.Stat(webFS, path[1:]+".html"); err == nil {
 						path = path + ".html"
+						log.Printf("[DEBUG] Found with .html suffix: %s", path)
+					} else {
+						// 3. 尝试目录下的 index.html
+						if _, err := fs.Stat(webFS, path[1:]+"/index.html"); err == nil {
+							path = path + "/index.html"
+							log.Printf("[DEBUG] Found index.html in directory: %s", path)
+						}
 					}
+				} else {
+					log.Printf("[DEBUG] File found (original): %s", path[1:])
 				}
 			}
+			
+			log.Printf("[DEBUG] Attempting to open: %s", path[1:])
 			
 			// 读取文件
 			file, err := webFS.Open(path[1:])
 			if err != nil {
+				log.Printf("[DEBUG] Failed to open file: %s, error: %v", path[1:], err)
+				// 如果找不到文件，返回 404.html 或默认 404
+				file404, err := webFS.Open("404.html")
+				if err == nil {
+					defer file404.Close()
+					content, _ := io.ReadAll(file404)
+					c.Data(http.StatusNotFound, "text/html; charset=utf-8", content)
+					return
+				}
 				c.String(http.StatusNotFound, "404 page not found")
 				return
 			}
@@ -156,22 +179,29 @@ func setupStaticFiles(r *gin.Engine, staticFiles embed.FS) {
 			}
 			
 			// 根据文件扩展名设置 Content-Type
+			contentType := "application/octet-stream"
 			switch {
 			case len(path) > 5 && path[len(path)-5:] == ".html":
-				c.Data(http.StatusOK, "text/html; charset=utf-8", content)
+				contentType = "text/html; charset=utf-8"
 			case len(path) > 4 && path[len(path)-4:] == ".css":
-				c.Data(http.StatusOK, "text/css; charset=utf-8", content)
-			case len(path) > 3 && path[len(path)-3:] == ".js":
-				c.Data(http.StatusOK, "application/javascript; charset=utf-8", content)
+				contentType = "text/css; charset=utf-8"
+			case len(path) > 3 && (path[len(path)-3:] == ".js" || path[len(path)-3:] == ".mjs"):
+				contentType = "application/javascript; charset=utf-8"
 			case len(path) > 4 && path[len(path)-4:] == ".svg":
-				c.Data(http.StatusOK, "image/svg+xml", content)
+				contentType = "image/svg+xml"
 			case len(path) > 4 && path[len(path)-4:] == ".png":
-				c.Data(http.StatusOK, "image/png", content)
+				contentType = "image/png"
+			case len(path) > 4 && path[len(path)-4:] == ".jpg" || len(path) > 5 && path[len(path)-5:] == ".jpeg":
+				contentType = "image/jpeg"
 			case len(path) > 4 && path[len(path)-4:] == ".ico":
-				c.Data(http.StatusOK, "image/x-icon", content)
-			default:
-				c.Data(http.StatusOK, "application/octet-stream", content)
+				contentType = "image/x-icon"
+			case len(path) > 5 && path[len(path)-5:] == ".json":
+				contentType = "application/json; charset=utf-8"
+			case len(path) > 4 && path[len(path)-4:] == ".txt":
+				contentType = "text/plain; charset=utf-8"
 			}
+			
+			c.Data(http.StatusOK, contentType, content)
 		})
 	} else {
 		// 传统的 templates + static 模式

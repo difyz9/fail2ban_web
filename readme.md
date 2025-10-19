@@ -4,6 +4,14 @@
 
 项目基于 geekai 的工程结构改造，使用 uber-go/fx 实现依赖注入，配置采用 TOML（参照 geekai 的 core/config.go 实现）。
 
+**✨ 特色**：前端使用 Next.js 15，构建后通过 Go embed 嵌入到单一二进制文件，实现真正的一键部署！
+
+## 📚 文档导航
+
+- [前端构建详细指南](FRONTEND_BUILD.md) - 完整的前端构建和 embed 使用说明
+- [配置系统说明](CONFIG_SYSTEM.md) - TOML 配置文件详解
+- [Embed 完成总结](EMBED_SUMMARY.md) - 前端嵌入功能实现总结
+
 ---
 
 ## 关键特性

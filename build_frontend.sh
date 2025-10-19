@@ -58,6 +58,12 @@ if [ -d "$FRONTEND_SRC" ]; then
         if [ -d "out" ]; then
             echo -e "${GREEN}✅ 复制构建产物 (out) 到 web 目录...${NC}"
             cp -r out/* "$WEB_DIR/"
+            
+            # 如果存在 public/index.html，用它覆盖 Next.js 生成的 index.html
+            if [ -f "public/index.html" ]; then
+                echo -e "${GREEN}✅ 使用自定义 index.html 覆盖默认文件...${NC}"
+                cp public/index.html "$WEB_DIR/index.html"
+            fi
         elif [ -d "dist" ]; then
             echo -e "${GREEN}✅ 复制构建产物 (dist) 到 web 目录...${NC}"
             cp -r dist/* "$WEB_DIR/"
