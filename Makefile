@@ -20,7 +20,14 @@ DOCKER_CONTAINER = $(APP_NAME)-container
 
 # 默认目标
 .PHONY: all
-all: clean build
+all: clean build-frontend build
+
+# 构建前端资源
+.PHONY: build-frontend
+build-frontend:
+	@echo "构建前端资源..."
+	@chmod +x build_frontend.sh
+	@./build_frontend.sh
 
 # 构建应用程序
 .PHONY: build
@@ -29,6 +36,11 @@ build:
 	@mkdir -p $(BUILD_DIR)
 	CGO_ENABLED=1 $(GOBUILD) -o $(BUILD_DIR)/$(BINARY_NAME) $(MAIN_FILE)
 	@echo "构建完成: $(BUILD_DIR)/$(BINARY_NAME)"
+
+# 完整构建（前端+后端）
+.PHONY: build-full
+build-full: build-frontend build
+	@echo "✅ 完整构建完成！"
 
 # 运行应用程序
 .PHONY: run
@@ -91,7 +103,8 @@ build-darwin:
 
 # 构建所有平台版本
 .PHONY: build-all
-build-all: build-linux build-windows build-darwin
+build-all: build-frontend build-linux build-windows build-darwin
+	@echo "✅ 所有平台构建完成！"
 
 # Docker 构建
 .PHONY: docker-build
@@ -103,7 +116,7 @@ docker-build:
 .PHONY: docker-run
 docker-run:
 	@echo "运行 Docker 容器..."
-	docker run -d --name $(DOCKER_CONTAINER) -p 8092:8092 $(DOCKER_IMAGE)
+	docker run -d --name $(DOCKER_CONTAINER) -p 8099:8099 $(DOCKER_IMAGE)
 
 # Docker 停止
 .PHONY: docker-stop
@@ -242,10 +255,11 @@ delete-tag-remote:
 
 # 生产构建
 .PHONY: build-prod
-build-prod:
+build-prod: build-frontend
 	@echo "生产环境构建..."
 	@mkdir -p $(BUILD_DIR)
 	CGO_ENABLED=1 $(GOBUILD) -ldflags "-s -w" -o $(BUILD_DIR)/$(BINARY_NAME) $(MAIN_FILE)
+	@echo "✅ 生产环境构建完成！"
 
 # 帮助信息
 .PHONY: help
@@ -253,12 +267,14 @@ help:
 	@echo "可用的命令："
 	@echo ""
 	@echo "📦 构建相关:"
-	@echo "  build         - 构建应用程序"
+	@echo "  build-frontend - 构建前端资源到 web 目录"
+	@echo "  build         - 构建应用程序（仅后端）"
+	@echo "  build-full    - 完整构建（前端 + 后端）"
 	@echo "  build-linux   - 构建 Linux 版本"
 	@echo "  build-windows - 构建 Windows 版本"
 	@echo "  build-darwin  - 构建 macOS 版本"
-	@echo "  build-all     - 构建所有平台版本"
-	@echo "  build-prod    - 生产环境构建"
+	@echo "  build-all     - 构建所有平台版本（包含前端）"
+	@echo "  build-prod    - 生产环境构建（包含前端）"
 	@echo ""
 	@echo "🚀 运行相关:"
 	@echo "  run           - 运行应用程序"

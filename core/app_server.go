@@ -108,16 +108,86 @@ func errorHandler(logger *logrus.Logger) gin.HandlerFunc {
 
 // setupStaticFiles 设置静态文件和模板
 func setupStaticFiles(r *gin.Engine, staticFiles embed.FS) {
-	// 设置静态文件
-	staticFS, err := fs.Sub(staticFiles, "web/static")
-	if err != nil {
-		log.Fatal("Failed to load static files:", err)
+	// 检查是否是 Next.js 构建产物结构（web/ 目录下直接有 HTML 文件）
+	if _, err := fs.Stat(staticFiles, "web/index.html"); err == nil {
+		// Next.js 静态导出模式
+		log.Println("Detected Next.js build output, serving as static files")
+		
+		// 提供整个 web 目录作为静态文件服务
+		webFS, err := fs.Sub(staticFiles, "web")
+		if err != nil {
+			log.Fatal("Failed to load web files:", err)
+		}
+		
+		// 服务 _next 静态资源
+		r.StaticFS("/_next", http.FS(webFS))
+		
+		// 服务所有 HTML 和其他静态文件
+		r.NoRoute(func(c *gin.Context) {
+			path := c.Request.URL.Path
+			
+			// 默认路径指向 index.html
+			if path == "/" {
+				path = "/index.html"
+			} else if path[len(path)-1] == '/' {
+				path = path + "index.html"
+			} else {
+				// 尝试添加 .html 后缀
+				if _, err := fs.Stat(webFS, path[1:]); err != nil {
+					if _, err := fs.Stat(webFS, path[1:]+".html"); err == nil {
+						path = path + ".html"
+					}
+				}
+			}
+			
+			// 读取文件
+			file, err := webFS.Open(path[1:])
+			if err != nil {
+				c.String(http.StatusNotFound, "404 page not found")
+				return
+			}
+			defer file.Close()
+			
+			// 读取文件内容
+			content, err := io.ReadAll(file)
+			if err != nil {
+				c.String(http.StatusInternalServerError, "Error reading file")
+				return
+			}
+			
+			// 根据文件扩展名设置 Content-Type
+			switch {
+			case len(path) > 5 && path[len(path)-5:] == ".html":
+				c.Data(http.StatusOK, "text/html; charset=utf-8", content)
+			case len(path) > 4 && path[len(path)-4:] == ".css":
+				c.Data(http.StatusOK, "text/css; charset=utf-8", content)
+			case len(path) > 3 && path[len(path)-3:] == ".js":
+				c.Data(http.StatusOK, "application/javascript; charset=utf-8", content)
+			case len(path) > 4 && path[len(path)-4:] == ".svg":
+				c.Data(http.StatusOK, "image/svg+xml", content)
+			case len(path) > 4 && path[len(path)-4:] == ".png":
+				c.Data(http.StatusOK, "image/png", content)
+			case len(path) > 4 && path[len(path)-4:] == ".ico":
+				c.Data(http.StatusOK, "image/x-icon", content)
+			default:
+				c.Data(http.StatusOK, "application/octet-stream", content)
+			}
+		})
+	} else {
+		// 传统的 templates + static 模式
+		log.Println("Using traditional templates + static files mode")
+		
+		// 设置静态文件
+		staticFS, err := fs.Sub(staticFiles, "web/static")
+		if err != nil {
+			log.Fatal("Failed to load static files:", err)
+		}
+		r.StaticFS("/static", http.FS(staticFS))
+		
+		// 加载 HTML 模板
+		templ := template.Must(template.New("").ParseFS(staticFiles, "web/templates/*.html"))
+		r.SetHTMLTemplate(templ)
 	}
-	r.StaticFS("/static", http.FS(staticFS))
-	
-	// 加载 HTML 模板
-	templ := template.Must(template.New("").ParseFS(staticFiles, "web/templates/*.html"))
-	r.SetHTMLTemplate(templ)
 }
 
 // ApiResponse 统一API响应结构

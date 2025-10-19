@@ -9,13 +9,11 @@ import (
 	"fail2ban-web/internal/model"
 	"fail2ban-web/internal/service"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"go.uber.org/fx"
 	"gorm.io/driver/sqlite"
@@ -204,21 +202,7 @@ func registerRoutes(
 	// 添加中间件
 	r.Use(middleware.CORSMiddleware())
 
-	// 公共路由
-	r.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "index.html", gin.H{
-			"title": "Fail2Ban 管理面板",
-		})
-	})
-
-	// 登录页面
-	r.GET("/login", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "login.html", gin.H{
-			"title": "登录 - Fail2Ban 管理面板",
-		})
-	})
-
-	// API 路由组
+	// API 路由组（Next.js 前端会处理所有页面路由）
 	api := r.Group("/api/v1")
 
 	// 认证相关路由（不需要认证）

@@ -38,6 +38,12 @@ logs/
 *.sqlite
 *.sqlite3
 
+# 配置文件（包含敏感信息）
+config.toml
+
+# 前端构建产物（会被自动生成）
+web/
+
 # 环境变量文件
 
 .env.local
