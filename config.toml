@@ -1,0 +1,41 @@
+# Bilibili 视频上传后端 - 配置文件
+
+# 注意：以下配置已硬编码在代码中，无需在此配置：
+# - TenCosConfig (腾讯云 COS)
+# - BaiduTransConfig (百度翻译)
+# - app_auth (应用认证)
+# 
+# DeepSeekTransConfig 可通过API接口动态配置
+
+listen = ":8096"
+environment = "development"
+debug = false
+fileUpDir = "/Users/apple/opt/file_upload/media"
+yt_dlp_path = ""
+
+[database]
+  type = "sqlite"
+  host = ""
+  port = 0
+  username = ""
+  password = ""
+  database = "bili_up.db"
+  ssl_mode = ""
+  timezone = ""
+
+[auth]
+  jwt_secret = "your-jwt-secret-key"
+  jwt_expiration = 24
+  session_secret = "your-session-secret"
+
+[DeepSeekTransConfig]
+  enabled = true
+  api_key = "sk-baa...3460"
+  models = ""
+  endpoint = "https://api.deepseek.com"
+  timeout = 60
+  max_tokens = 4000
+
+[ProxyConfig]
+  use_proxy = false
+  proxy_host = "http://127.0.0.1:7890"
