@@ -11,7 +11,6 @@ import (
 	"sync"
 	"time"
 
-	"fail2ban-web/config"
 	"fail2ban-web/internal/model"
 	"gorm.io/gorm"
 )
@@ -45,7 +44,6 @@ type ScanResult struct {
 
 // IntelligentScanService 智能扫描服务
 type IntelligentScanService struct {
-	config            *config.Config
 	db                *gorm.DB
 	sshService        *SSHService
 	nginxService      *NginxService
@@ -63,13 +61,12 @@ type IntelligentScanService struct {
 }
 
 // NewIntelligentScanService 创建新的智能扫描服务实例
-func NewIntelligentScanService(cfg *config.Config, db *gorm.DB, sshService *SSHService, 
+func NewIntelligentScanService(db *gorm.DB, sshService *SSHService, 
 	nginxService *NginxService, jailService *JailService, fail2banService *Fail2BanService) *IntelligentScanService {
 	
 	ctx, cancel := context.WithCancel(context.Background())
 	
 	return &IntelligentScanService{
-		config:           cfg,
 		db:               db,
 		sshService:       sshService,
 		nginxService:     nginxService,

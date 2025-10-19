@@ -2,7 +2,6 @@ package handler
 
 import (
 	"net/http"
-	"os"
 
 	"fail2ban-web/core"
 	"fail2ban-web/internal/middleware"
@@ -36,11 +35,8 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	// 验证用户名和密码（临时使用环境变量或默认值）
-	adminUser := getEnvOrDefault("ADMIN_USERNAME", "admin")
-	adminPass := getEnvOrDefault("ADMIN_PASSWORD", "admin")
-	
-	if req.Username != adminUser || req.Password != adminPass {
+	// 验证用户名和密码（从配置中读取）
+	if req.Username != h.App.Config.Admin.Username || req.Password != h.App.Config.Admin.Password {
 		c.JSON(http.StatusUnauthorized, model.NewErrorResponse(
 			"invalid_credentials",
 			"Invalid username or password",
@@ -49,7 +45,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	// 生成JWT token
-	token, expiresAt, err := middleware.GenerateToken(1, req.Username, "admin")
+	token, expiresAt, err := middleware.GenerateToken(1, h.App.Config.Admin.Username, "admin")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, model.NewErrorResponse(
 			"token_generation_failed",
@@ -59,11 +55,10 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	// 创建用户对象（用于响应）
-	adminEmail := getEnvOrDefault("ADMIN_EMAIL", "admin@example.com")
 	user := model.User{
 		ID:       1,
-		Username: adminUser,
-		Email:    adminEmail,
+		Username: h.App.Config.Admin.Username,
+		Email:    h.App.Config.Admin.Email,
 		Role:     "admin",
 		IsActive: true,
 	}
@@ -89,11 +84,10 @@ func (h *AuthHandler) GetProfile(c *gin.Context) {
 	}
 
 	// 返回管理员用户信息
-	adminEmail := getEnvOrDefault("ADMIN_EMAIL", "admin@example.com")
 	user := model.User{
 		ID:       1,
 		Username: username.(string),
-		Email:    adminEmail,
+		Email:    h.App.Config.Admin.Email,
 		Role:     "admin",
 		IsActive: true,
 	}
@@ -146,12 +140,4 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, model.NewSuccessResponse(data, "Token refreshed successfully"))
-}
-
-// getEnvOrDefault 获取环境变量，如果不存在则返回默认值
-func getEnvOrDefault(key, defaultValue string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
-	}
-	return defaultValue
 }

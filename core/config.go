@@ -1,39 +1,64 @@
 package core
 
 import (
+	"bytes"
 	"log"
 	"os"
+
+	"github.com/BurntSushi/toml"
 )
 
-// LoadConfig 加载配置
-func LoadConfig() *AppConfig {
-	listen := os.Getenv("LISTEN_ADDR")
-	if listen == "" {
-		listen = ":8092"
+// NewDefaultConfig 创建默认配置
+func NewDefaultConfig() *AppConfig {
+	return &AppConfig{
+		Listen:    ":8092",
+		StaticDir: "./web/static",
+		StaticURL: "http://localhost:8092/static",
+		DBPath:    "fail2ban_web.db",
+		Admin: AdminConfig{
+			Username: "admin",
+			Password: "admin123",
+			Email:    "admin@example.com",
+		},
+	}
+}
+
+// LoadConfig 加载配置文件
+func LoadConfig(configFile string) (*AppConfig, error) {
+	var config *AppConfig
+	_, err := os.Stat(configFile)
+	if err != nil {
+		// 配置文件不存在，创建默认配置
+		log.Println("Creating new config file:", configFile)
+		config = NewDefaultConfig()
+		config.Path = configFile
+		
+		// 保存默认配置到文件
+		err := SaveConfig(config)
+		if err != nil {
+			return nil, err
+		}
+		
+		return config, nil
 	}
 	
-	dbPath := os.Getenv("DB_PATH")
-	if dbPath == "" {
-		dbPath = "fail2ban_web.db"
+	// 读取配置文件
+	_, err = toml.DecodeFile(configFile, &config)
+	if err != nil {
+		return nil, err
 	}
 	
-	staticDir := os.Getenv("STATIC_DIR")
-	if staticDir == "" {
-		staticDir = "./web/static"
+	config.Path = configFile
+	return config, nil
+}
+
+// SaveConfig 保存配置到文件
+func SaveConfig(config *AppConfig) error {
+	buf := new(bytes.Buffer)
+	encoder := toml.NewEncoder(buf)
+	if err := encoder.Encode(config); err != nil {
+		return err
 	}
 	
-	staticURL := os.Getenv("STATIC_URL")
-	if staticURL == "" {
-		staticURL = "http://localhost:8092/static"
-	}
-	
-	config := &AppConfig{
-		Listen:    listen,
-		DBPath:    dbPath,
-		StaticDir: staticDir,
-		StaticURL: staticURL,
-	}
-	
-	log.Printf("Loaded configuration: %+v", config)
-	return config
+	return os.WriteFile(config.Path, buf.Bytes(), 0644)
 }

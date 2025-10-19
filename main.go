@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"embed"
-	"fail2ban-web/config"
 	"fail2ban-web/core"
 	"fail2ban-web/internal/handler"
 	"fail2ban-web/internal/middleware"
@@ -48,16 +47,20 @@ func NewAppLifeCycle() *AppLifecycle {
 }
 
 func main() {
+	// 从环境变量读取配置文件路径
+	configFile := os.Getenv("CONFIG_FILE")
+	if configFile == "" {
+		configFile = "config.toml"
+	}
+	log.Println("Loading config file:", configFile)
+	
 	app := fx.New(
-		// 提供配置
-		fx.Provide(func() *core.AppConfig {
-			return core.LoadConfig()
+		// 提供核心配置
+		fx.Provide(func() (*core.AppConfig, error) {
+			return core.LoadConfig(configFile)
 		}),
 		
-		// 提供旧的 config.Config 以兼容现有服务
-		fx.Provide(func() *config.Config {
-			return config.LoadConfig()
-		}),
+
 
 		// 提供日志
 		fx.Provide(func() *logrus.Logger {

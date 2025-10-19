@@ -10,14 +10,11 @@ import (
 	"strings"
 	"time"
 
-	"fail2ban-web/config"
-
 	"gorm.io/gorm"
 )
 
 type NginxService struct {
-	config *config.Config
-	db     *gorm.DB
+	db *gorm.DB
 }
 
 type NginxStats struct {
@@ -47,10 +44,9 @@ type NginxLog struct {
 	IsBlocked   bool      `json:"is_blocked"`
 }
 
-func NewNginxService(cfg *config.Config, db *gorm.DB) *NginxService {
+func NewNginxService(db *gorm.DB) *NginxService {
 	return &NginxService{
-		config: cfg,
-		db:     db,
+		db: db,
 	}
 }
 
@@ -123,9 +119,6 @@ func (s *NginxService) analyzeNginxLogs() (*NginxStats, error) {
 	
 	// 读取Nginx访问日志
 	accessLogPath := "/var/log/nginx/access.log"
-	if s.config.Fail2Ban.NginxAccessLog != "" {
-		accessLogPath = s.config.Fail2Ban.NginxAccessLog
-	}
 	
 	file, err := os.Open(accessLogPath)
 	if err != nil {
@@ -316,15 +309,7 @@ func (s *NginxService) detectAttackType(method, url, userAgent, statusCode strin
 func (s *NginxService) GetNginxLogs(limit int) ([]NginxLog, error) {
 	var logs []NginxLog
 	
-	// 开发模式使用测试日志
-	if s.config.Fail2Ban.DevMode {
-		return s.getTestNginxLogs(limit), nil
-	}
-	
 	accessLogPath := "/var/log/nginx/access.log"
-	if s.config.Fail2Ban.NginxAccessLog != "" {
-		accessLogPath = s.config.Fail2Ban.NginxAccessLog
-	}
 	
 	// 检查文件是否存在
 	if _, err := os.Stat(accessLogPath); os.IsNotExist(err) {

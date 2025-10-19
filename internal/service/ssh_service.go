@@ -10,14 +10,11 @@ import (
 	"strings"
 	"time"
 
-	"fail2ban-web/config"
-
 	"gorm.io/gorm"
 )
 
 type SSHService struct {
-	config *config.Config
-	db     *gorm.DB
+	db *gorm.DB
 }
 
 type SSHStats struct {
@@ -43,10 +40,9 @@ type SSHLog struct {
 	Status    string    `json:"status"`
 }
 
-func NewSSHService(cfg *config.Config, db *gorm.DB) *SSHService {
+func NewSSHService(db *gorm.DB) *SSHService {
 	return &SSHService{
-		config: cfg,
-		db:     db,
+		db: db,
 	}
 }
 
@@ -152,21 +148,12 @@ func (s *SSHService) analyzeSSHLogs() (*SSHStats, error) {
 func (s *SSHService) GetSSHLogs(limit int) ([]SSHLog, error) {
 	var logs []SSHLog
 	
-	// 开发模式使用测试日志
-	if s.config.Fail2Ban.DevMode {
-		return s.getTestSSHLogs(limit), nil
-	}
-	
 	// 尝试多个可能的SSH日志路径
 	logPaths := []string{
 		"/var/log/auth.log",       // Ubuntu/Debian
 		"/var/log/secure",         // CentOS/RHEL
 		"/var/log/messages",       // 一些系统
 		"/var/log/syslog",         // 备选路径
-	}
-	
-	if s.config.Fail2Ban.SSHLogPath != "" {
-		logPaths = append([]string{s.config.Fail2Ban.SSHLogPath}, logPaths...)
 	}
 	
 	var file *os.File
