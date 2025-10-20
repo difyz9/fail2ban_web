@@ -188,6 +188,8 @@ func (s *SSHService) GetSSHLogs(limit int) ([]SSHLog, error) {
 	// 从最后开始处理，获取最新的日志
 	count := 0
 	parsed := 0
+	savedCount := 0
+	
 	for i := len(lines) - 1; i >= 0 && count < limit; i-- {
 		line := lines[i]
 		if strings.TrimSpace(line) == "" {
@@ -197,12 +199,19 @@ func (s *SSHService) GetSSHLogs(limit int) ([]SSHLog, error) {
 		if log := parseSSHLogLine(line); log != nil {
 			logs = append([]SSHLog{*log}, logs...)
 			count++
+			
+			// 保存到数据库
+			if err := s.saveSSHLogToDatabase(log, line); err != nil {
+				fmt.Printf("警告: 保存SSH日志到数据库失败: %v\n", err)
+			} else {
+				savedCount++
+			}
 		}
 		parsed++
 	}
 	
 	// 记录解析结果
-	fmt.Printf("SSH日志解析完成: 读取%d行，解析成功%d条，文件: %s\n", parsed, count, usedPath)
+	fmt.Printf("SSH日志解析完成: 读取%d行，解析成功%d条，保存到数据库%d条，文件: %s\n", parsed, count, savedCount, usedPath)
 
 	return logs, nil
 }
@@ -399,4 +408,122 @@ func getTopIPs(ipCount map[string]int, limit int) []string {
 	}
 
 	return topIPs
+}
+
+// saveSSHLogToDatabase 保存 SSH 日志到数据库
+func (s *SSHService) saveSSHLogToDatabase(log *SSHLog, rawLog string) error {
+	if s.db == nil {
+		return fmt.Errorf("database not initialized")
+	}
+	
+	// 导入 model 包
+	accessLog := struct {
+		ServiceType string
+		IPAddress   string
+		Username    string
+		Event       string
+		Status      string
+		Method      string
+		RawLog      string
+		LogTime     time.Time
+		IsThreat    bool
+		ThreatLevel string
+	}{
+		ServiceType: "ssh",
+		IPAddress:   log.IP,
+		Username:    log.User,
+		Event:       log.Event,
+		Status:      log.Status,
+		Method:      log.Event, // SSH 使用 event 作为 method
+		RawLog:      rawLog,
+		LogTime:     log.Timestamp,
+		IsThreat:    log.Status == "failed",
+		ThreatLevel: getThreatLevel(log.Status, log.Event),
+	}
+	
+	// 保存访问日志
+	result := s.db.Table("access_logs").Create(&accessLog)
+	if result.Error != nil {
+		return fmt.Errorf("failed to save access log: %w", result.Error)
+	}
+	
+	// 更新 IP 统计
+	if log.IP != "" {
+		if err := s.updateIPStatistics(log); err != nil {
+			fmt.Printf("警告: 更新IP统计失败: %v\n", err)
+		}
+	}
+	
+	return nil
+}
+
+// updateIPStatistics 更新 IP 统计信息
+func (s *SSHService) updateIPStatistics(log *SSHLog) error {
+	if s.db == nil {
+		return fmt.Errorf("database not initialized")
+	}
+	
+	var ipStats struct {
+		ID              uint
+		IPAddress       string
+		TotalRequests   int
+		FailedRequests  int
+		SuccessRequests int
+		SSHAttempts     int
+		LastSeen        time.Time
+		FirstSeen       time.Time
+		ThreatScore     int
+	}
+	
+	// 查找或创建 IP 统计记录
+	result := s.db.Table("ip_statistics").Where("ip_address = ?", log.IP).First(&ipStats)
+	
+	if result.Error == gorm.ErrRecordNotFound {
+		// 新 IP，创建记录
+		ipStats.IPAddress = log.IP
+		ipStats.FirstSeen = log.Timestamp
+		ipStats.LastSeen = log.Timestamp
+		ipStats.TotalRequests = 1
+		ipStats.SSHAttempts = 1
+		
+		if log.Status == "failed" {
+			ipStats.FailedRequests = 1
+			ipStats.ThreatScore = 10
+		} else if log.Status == "success" {
+			ipStats.SuccessRequests = 1
+		}
+		
+		result = s.db.Table("ip_statistics").Create(&ipStats)
+		return result.Error
+	} else if result.Error != nil {
+		return result.Error
+	}
+	
+	// 更新现有记录
+	updates := map[string]interface{}{
+		"total_requests": gorm.Expr("total_requests + ?", 1),
+		"ssh_attempts":   gorm.Expr("ssh_attempts + ?", 1),
+		"last_seen":      log.Timestamp,
+	}
+	
+	if log.Status == "failed" {
+		updates["failed_requests"] = gorm.Expr("failed_requests + ?", 1)
+		updates["threat_score"] = gorm.Expr("threat_score + ?", 5) // 每次失败增加 5 分
+	} else if log.Status == "success" {
+		updates["success_requests"] = gorm.Expr("success_requests + ?", 1)
+	}
+	
+	result = s.db.Table("ip_statistics").Where("ip_address = ?", log.IP).Updates(updates)
+	return result.Error
+}
+
+// getThreatLevel 根据状态和事件获取威胁等级
+func getThreatLevel(status, event string) string {
+	if status == "failed" {
+		if strings.Contains(event, "invalid_user") {
+			return "high"
+		}
+		return "medium"
+	}
+	return "low"
 }

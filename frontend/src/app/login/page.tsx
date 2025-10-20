@@ -35,7 +35,7 @@ function LoginForm() {
       await login({
         username: formData.username,
         password: formData.password,
-      });
+      }, formData.rememberMe); // 传递 rememberMe 参数
     } catch (err: any) {
       setError(err.message || '登录失败，请检查用户名和密码');
     } finally {

@@ -9,7 +9,7 @@ import type { User, LoginRequest } from '@/types/api';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (credentials: LoginRequest) => Promise<void>;
+  login: (credentials: LoginRequest, rememberMe?: boolean) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -24,20 +24,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // 初始化时获取用户信息
   useEffect(() => {
     const initAuth = async () => {
-      const token = Cookies.get('auth_token'); // 修正：使用正确的 key
+      const token = Cookies.get('auth_token');
+      console.log('[AuthContext] Initializing auth, token exists:', !!token);
+      
       if (token) {
         try {
+          // 先从本地 Cookie 恢复用户信息（避免闪烁）
+          const cachedUser = authService.getCurrentUser();
+          console.log('[AuthContext] Cached user:', cachedUser);
+          
+          if (cachedUser) {
+            setUser(cachedUser);
+            console.log('[AuthContext] Restored user from cache');
+          }
+          
+          // 然后从服务器验证并更新用户信息
+          console.log('[AuthContext] Fetching user profile from server...');
           const userData = await authService.getProfile();
+          console.log('[AuthContext] User profile fetched:', userData);
           setUser(userData);
         } catch (error) {
-          console.error('Failed to get user profile:', error);
-          authService.clearAuthData(); // 使用 authService 的方法清除
+          console.error('[AuthContext] Failed to get user profile:', error);
+          authService.clearAuthData();
+          setUser(null);
         }
+      } else {
+        console.log('[AuthContext] No token found, user not logged in');
       }
       setLoading(false);
     };
 
-    initAuth();
+    // 添加超时保护，确保 loading 状态不会永久卡住
+    const timeout = setTimeout(() => {
+      console.log('[AuthContext] Timeout reached, setting loading to false');
+      setLoading(false);
+    }, 3000); // 3秒超时
+
+    initAuth().finally(() => {
+      clearTimeout(timeout);
+    });
+
+    return () => clearTimeout(timeout);
   }, []);
 
   // 自动刷新 token
@@ -56,9 +83,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user]);
 
-  const login = async (credentials: LoginRequest) => {
-    const response = await authService.login(credentials);
+  const login = async (credentials: LoginRequest, rememberMe: boolean = false) => {
+    const response = await authService.login(credentials, rememberMe);
     setUser(response.user);
+    
+    // 确保用户信息已保存到 Cookies
+    authService.saveAuthData({
+      token: response.token,
+      user: response.user,
+    }, rememberMe);
+    
     router.push('/dashboard');
   };
 
