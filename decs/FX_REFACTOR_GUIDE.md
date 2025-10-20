@@ -76,7 +76,7 @@ func main() {
     // ... 大量路由配置
     
     // 启动服务器
-    r.Run(":8092")
+    r.Run(":8099")
 }
 ```
 
@@ -202,9 +202,9 @@ lc.Append(fx.Hook{
 ```go
 lc.Append(fx.Hook{
     OnStart: func(ctx context.Context) error {
-        params.Logger.Info("Starting HTTP server on :8092...")
+        params.Logger.Info("Starting HTTP server on :8099...")
         go func() {
-            params.Router.Run(":8092")
+            params.Router.Run(":8099")
         }()
         return nil
     },
@@ -247,8 +247,8 @@ lc.Append(fx.Hook{
 
 ### **Before (传统方式)**
 ```
-2025/10/15 12:00:00 服务器启动在端口 :8092
-2025/10/15 12:00:00 访问 http://localhost:8092 打开管理面板
+2025/10/15 12:00:00 服务器启动在端口 :8099
+2025/10/15 12:00:00 访问 http://localhost:8099 打开管理面板
 ```
 
 ### **After (Fx 方式)**
@@ -266,8 +266,8 @@ lc.Append(fx.Hook{
 [Fx] HOOK OnStart   fail2ban-web/app.NewServices.func1() executing
 {"level":"INFO","msg":"Starting intelligent scan service..."}
 [Fx] HOOK OnStart   fail2ban-web/app.RegisterServer.func1() executing
-{"level":"INFO","msg":"Starting HTTP server on :8092..."}
-{"level":"INFO","msg":"Access the management panel at http://localhost:8092"}
+{"level":"INFO","msg":"Starting HTTP server on :8099..."}
+{"level":"INFO","msg":"Access the management panel at http://localhost:8099"}
 [Fx] RUNNING
 ```
 
@@ -419,9 +419,9 @@ func NewRouter(params RouterParams) *gin.Engine {
 func RegisterServer(params ServerParams) {
     params.Lifecycle.Append(fx.Hook{
         OnStart: func(ctx context.Context) error {
-            params.Logger.Info("Starting HTTP server on :8092...")
+            params.Logger.Info("Starting HTTP server on :8099...")
             go func() {
-                params.Router.Run(":8092")
+                params.Router.Run(":8099")
             }()
             return nil
         },
@@ -512,13 +512,13 @@ make run
 ### 健康检查
 
 ```bash
-curl http://localhost:8092/api/v1/health
+curl http://localhost:8099/api/v1/health
 ```
 
 ### 登录测试
 
 ```bash
-curl -X POST http://localhost:8092/api/v1/auth/login \
+curl -X POST http://localhost:8099/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"admin","password":"admin123"}' | jq .
 ```

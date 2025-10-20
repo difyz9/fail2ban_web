@@ -10,7 +10,7 @@ make build
 ./build/fail2ban-web
 
 # 测试
-curl http://localhost:8092/api/v1/auth/login \
+curl http://localhost:8099/api/v1/auth/login \
   -X POST \
   -H "Content-Type: application/json" \
   -d '{"username":"admin","password":"admin123"}'

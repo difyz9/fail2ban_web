@@ -112,7 +112,7 @@ make build-prod
 # 2025/10/19 17:31:17 Creating new config file: config.toml
 ```
 
-程序默认监听 `:8092`，访问 `http://localhost:8092` 即可使用 Web 界面。
+程序默认监听 `:8099`，访问 `http://localhost:8099` 即可使用 Web 界面。
 
 ### 使用自定义配置文件
 
@@ -127,9 +127,9 @@ CONFIG_FILE="production.toml" ./fail2ban_web
 程序使用 TOML 文件作为配置，默认配置示例：
 
 ```toml
-Listen = ":8092"
+Listen = ":8099"
 StaticDir = "./web/static"
-StaticURL = "http://localhost:8092/static"
+StaticURL = "http://localhost:8099/static"
 DBPath = "fail2ban_web.db"
 
 [Admin]

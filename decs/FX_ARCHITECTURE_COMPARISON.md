@@ -238,7 +238,7 @@ var ServerModule = fx.Module("server",
     fx.Invoke(func(lifecycle fx.Lifecycle, r *gin.Engine, cfg *config.Config) {
         lifecycle.Append(fx.Hook{
             OnStart: func(ctx context.Context) error {
-                go r.Run(":8092")
+                go r.Run(":8099")
                 return nil
             },
         })

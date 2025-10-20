@@ -3,7 +3,7 @@ package core
 // AppConfig 应用配置
 type AppConfig struct {
 	Path      string `toml:"-"` // 配置文件路径，不保存到 TOML
-	Listen    string // 监听地址，如 ":8092" 或 "0.0.0.0:8092"
+	Listen    string // 监听地址，如 ":8099" 或 "0.0.0.0:8099"
 	StaticDir string // 静态资源目录
 	StaticURL string // 静态资源 URL
 	DBPath    string // 数据库文件路径

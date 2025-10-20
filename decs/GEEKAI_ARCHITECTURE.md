@@ -213,7 +213,7 @@ fx.Invoke(func(lifecycle fx.Lifecycle, intelligentService *service.IntelligentSc
 func LoadConfig() *AppConfig {
     listen := os.Getenv("LISTEN_ADDR")
     if listen == "" {
-        listen = ":8092"
+        listen = ":8099"
     }
     
     dbPath := os.Getenv("DB_PATH")
@@ -225,7 +225,7 @@ func LoadConfig() *AppConfig {
         Listen:    listen,
         DBPath:    dbPath,
         StaticDir: "./web/static",
-        StaticURL: "http://localhost:8092/static",
+        StaticURL: "http://localhost:8099/static",
     }
 }
 ```
@@ -311,8 +311,8 @@ fail2ban_web/
 ### 环境变量
 
 ```bash
-# 服务器监听地址（可选，默认:8092）
-export LISTEN_ADDR=":8092"
+# 服务器监听地址（可选，默认:8099）
+export LISTEN_ADDR=":8099"
 
 # 数据库路径（可选，默认 fail2ban_web.db）
 export DB_PATH="fail2ban_web.db"
@@ -324,7 +324,7 @@ export ADMIN_EMAIL="admin@example.com"
 
 # 静态资源配置（可选）
 export STATIC_DIR="./web/static"
-export STATIC_URL="http://localhost:8092/static"
+export STATIC_URL="http://localhost:8099/static"
 ```
 
 ### 依赖

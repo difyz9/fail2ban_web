@@ -11,9 +11,9 @@ import (
 // NewDefaultConfig 创建默认配置
 func NewDefaultConfig() *AppConfig {
 	return &AppConfig{
-		Listen:    ":8092",
+		Listen:    ":8099",
 		StaticDir: "./web/static",
-		StaticURL: "http://localhost:8092/static",
+		StaticURL: "http://localhost:8099/static",
 		DBPath:    "fail2ban_web.db",
 		Admin: AdminConfig{
 			Username: "admin",

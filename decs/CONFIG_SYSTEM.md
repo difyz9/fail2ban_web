@@ -11,9 +11,9 @@
 **config.toml** - TOML 格式的配置文件
 
 ```toml
-Listen = ":8092"
+Listen = ":8099"
 StaticDir = "./web/static"
-StaticURL = "http://localhost:8092/static"
+StaticURL = "http://localhost:8099/static"
 DBPath = "fail2ban_web.db"
 
 [Admin]
@@ -28,7 +28,7 @@ DBPath = "fail2ban_web.db"
 // AppConfig 应用配置
 type AppConfig struct {
 	Path      string `toml:"-"` // 配置文件路径，不保存到 TOML
-	Listen    string // 监听地址，如 ":8092" 或 "0.0.0.0:8092"
+	Listen    string // 监听地址，如 ":8099" 或 "0.0.0.0:8099"
 	StaticDir string // 静态资源目录
 	StaticURL string // 静态资源 URL
 	DBPath    string // 数据库文件路径
@@ -53,9 +53,9 @@ type AdminConfig struct {
 ```go
 func NewDefaultConfig() *AppConfig {
 	return &AppConfig{
-		Listen:    ":8092",
+		Listen:    ":8099",
 		StaticDir: "./web/static",
-		StaticURL: "http://localhost:8092/static",
+		StaticURL: "http://localhost:8099/static",
 		DBPath:    "fail2ban_web.db",
 		Admin: AdminConfig{
 			Username: "admin",
@@ -220,9 +220,9 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 | 配置项 | 类型 | 默认值 | 说明 |
 |--------|------|--------|------|
-| Listen | string | ":8092" | HTTP 服务器监听地址 |
+| Listen | string | ":8099" | HTTP 服务器监听地址 |
 | StaticDir | string | "./web/static" | 静态资源目录路径 |
-| StaticURL | string | "http://localhost:8092/static" | 静态资源访问 URL |
+| StaticURL | string | "http://localhost:8099/static" | 静态资源访问 URL |
 | DBPath | string | "fail2ban_web.db" | SQLite 数据库文件路径 |
 
 ### 管理员配置 [Admin]
@@ -278,9 +278,9 @@ require (
 ### 开发环境配置 (config.toml)
 
 ```toml
-Listen = ":8092"
+Listen = ":8099"
 StaticDir = "./web/static"
-StaticURL = "http://localhost:8092/static"
+StaticURL = "http://localhost:8099/static"
 DBPath = "fail2ban_web.db"
 
 [Admin]

@@ -91,10 +91,10 @@ go build -o build/fail2ban-web main.go
 
 ```bash
 # 健康检查
-curl http://localhost:8092/api/v1/health
+curl http://localhost:8099/api/v1/health
 
 # 登录测试
-curl -X POST http://localhost:8092/api/v1/auth/login \
+curl -X POST http://localhost:8099/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"admin","password":"admin123"}' | jq .
 ```
