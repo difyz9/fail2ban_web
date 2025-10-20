@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>登录状态测试</title>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3/dist/js.cookie.min.js"></script>
+</head>
+<body>
+    <h1>登录状态测试</h1>
+    <div id="result"></div>
+    
+    <script>
+        const token = Cookies.get('auth_token');
+        const userInfo = Cookies.get('user_info');
+        const rememberMe = Cookies.get('remember_me');
+        
+        const result = document.getElementById('result');
+        result.innerHTML = `
+            <h2>Cookie 信息</h2>
+            <p><strong>Token:</strong> ${token || '未找到'}</p>
+            <p><strong>User Info:</strong> ${userInfo || '未找到'}</p>
+            <p><strong>Remember Me:</strong> ${rememberMe || '未找到'}</p>
+            
+            <h2>解析后的用户信息</h2>
+            <pre>${userInfo ? JSON.stringify(JSON.parse(userInfo), null, 2) : '无'}</pre>
+            
+            <hr>
+            <button onclick="testAPI()">测试 API</button>
+            <div id="api-result"></div>
+        `;
+        
+        async function testAPI() {
+            const apiResult = document.getElementById('api-result');
+            try {
+                const response = await fetch('http://localhost:8099/api/v1/auth/profile', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const data = await response.json();
+                apiResult.innerHTML = `
+                    <h3>API 响应</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                apiResult.innerHTML = `
+                    <h3>API 错误</h3>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

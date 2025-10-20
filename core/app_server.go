@@ -123,8 +123,6 @@ func setupStaticFiles(r *gin.Engine, staticFiles embed.FS) {
 		r.NoRoute(func(c *gin.Context) {
 			path := c.Request.URL.Path
 			
-			log.Printf("[DEBUG] NoRoute handling: %s", path)
-			
 			// 默认路径指向 index.html
 			if path == "/" {
 				path = "/index.html"
@@ -133,31 +131,33 @@ func setupStaticFiles(r *gin.Engine, staticFiles embed.FS) {
 				path = path[:len(path)-1] + ".html"
 			} else {
 				// 尝试多种文件路径
-				// 1. 原始路径
-				if _, err := fs.Stat(webFS, path[1:]); err != nil {
-					log.Printf("[DEBUG] File not found (original): %s, error: %v", path[1:], err)
-					// 2. 添加 .html 后缀
+				// 1. 检查原始路径
+				fileInfo, err := fs.Stat(webFS, path[1:])
+				if err != nil {
+					// 文件不存在，尝试添加 .html 后缀
 					if _, err := fs.Stat(webFS, path[1:]+".html"); err == nil {
 						path = path + ".html"
-						log.Printf("[DEBUG] Found with .html suffix: %s", path)
 					} else {
-						// 3. 尝试目录下的 index.html
+						// 尝试目录下的 index.html
 						if _, err := fs.Stat(webFS, path[1:]+"/index.html"); err == nil {
 							path = path + "/index.html"
-							log.Printf("[DEBUG] Found index.html in directory: %s", path)
 						}
 					}
-				} else {
-					log.Printf("[DEBUG] File found (original): %s", path[1:])
+				} else if fileInfo.IsDir() {
+					// 如果是目录，尝试访问目录下的 index.html 或同名 .html 文件
+					if _, err := fs.Stat(webFS, path[1:]+"/index.html"); err == nil {
+						path = path + "/index.html"
+					} else {
+						// 尝试访问同名 .html 文件（例如 /dashboard -> /dashboard.html）
+						path = path + ".html"
+					}
 				}
+				// 如果是文件，直接使用原始路径
 			}
-			
-			log.Printf("[DEBUG] Attempting to open: %s", path[1:])
 			
 			// 读取文件
 			file, err := webFS.Open(path[1:])
 			if err != nil {
-				log.Printf("[DEBUG] Failed to open file: %s, error: %v", path[1:], err)
 				// 如果找不到文件，返回 404.html 或默认 404
 				file404, err := webFS.Open("404.html")
 				if err == nil {

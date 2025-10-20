@@ -10,10 +10,12 @@ interface AuthData {
 class AuthService {
   private readonly TOKEN_KEY = 'auth_token';
   private readonly USER_KEY = 'user_info';
-  private readonly TOKEN_EXPIRES = 7; // 7天
+  private readonly REMEMBER_KEY = 'remember_me';
+  private readonly TOKEN_EXPIRES_SHORT = 1; // 1天（不记住我）
+  private readonly TOKEN_EXPIRES_LONG = 30; // 30天（记住我）
 
   // 登录
-  async login(credentials: LoginRequest): Promise<LoginResponse> {
+  async login(credentials: LoginRequest, rememberMe: boolean = false): Promise<LoginResponse> {
     try {
       const response = await apiClient.post<LoginResponse>('/auth/login', credentials);
       
@@ -21,7 +23,7 @@ class AuthService {
       this.saveAuthData({
         token: response.token,
         user: response.user,
-      });
+      }, rememberMe);
       
       return response;
     } catch (error) {
@@ -52,9 +54,12 @@ class AuthService {
     try {
       const response = await apiClient.post<{ token: string; expires_at: number }>('/auth/refresh');
       
-      // 更新本地token
+      // 更新本地token（保持原有的过期时间设置）
+      const rememberMe = Cookies.get(this.REMEMBER_KEY) === 'true';
+      const expires = rememberMe ? this.TOKEN_EXPIRES_LONG : this.TOKEN_EXPIRES_SHORT;
+      
       Cookies.set(this.TOKEN_KEY, response.token, { 
-        expires: this.TOKEN_EXPIRES,
+        expires,
         sameSite: 'strict'
       });
       
@@ -75,13 +80,19 @@ class AuthService {
   }
 
   // 保存认证数据
-  saveAuthData(authData: AuthData): void {
+  saveAuthData(authData: AuthData, rememberMe: boolean = false): void {
+    const expires = rememberMe ? this.TOKEN_EXPIRES_LONG : this.TOKEN_EXPIRES_SHORT;
+    
     Cookies.set(this.TOKEN_KEY, authData.token, { 
-      expires: this.TOKEN_EXPIRES,
+      expires,
       sameSite: 'strict'
     });
     Cookies.set(this.USER_KEY, JSON.stringify(authData.user), { 
-      expires: this.TOKEN_EXPIRES,
+      expires,
+      sameSite: 'strict'
+    });
+    Cookies.set(this.REMEMBER_KEY, String(rememberMe), {
+      expires,
       sameSite: 'strict'
     });
   }
@@ -109,6 +120,7 @@ class AuthService {
   clearAuthData(): void {
     Cookies.remove(this.TOKEN_KEY);
     Cookies.remove(this.USER_KEY);
+    Cookies.remove(this.REMEMBER_KEY);
   }
 
   // 检查是否已登录
