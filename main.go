@@ -51,14 +51,12 @@ func main() {
 		configFile = "config.toml"
 	}
 	log.Println("Loading config file:", configFile)
-	
+
 	app := fx.New(
 		// 提供核心配置
 		fx.Provide(func() (*core.AppConfig, error) {
 			return core.LoadConfig(configFile)
 		}),
-		
-
 
 		// 提供日志
 		fx.Provide(func() *logrus.Logger {
@@ -92,11 +90,12 @@ func main() {
 			err = db.AutoMigrate(
 				&model.BannedIP{},
 				&model.Fail2banJail{},
+				&model.AccessLog{},
+				&model.IPStatistics{},
 			)
 			if err != nil {
 				return nil, err
 			}
-
 			log.Println("Database initialized successfully")
 			return db, nil
 		}),

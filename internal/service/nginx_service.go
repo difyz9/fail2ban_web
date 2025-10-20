@@ -356,6 +356,8 @@ func (s *NginxService) GetNginxLogs(limit int) ([]NginxLog, error) {
 	// 从最后开始处理，获取最新的日志
 	count := 0
 	parsed := 0
+	savedCount := 0
+	
 	for i := len(lines) - 1; i >= 0 && count < limit; i-- {
 		line := lines[i]
 		if strings.TrimSpace(line) == "" {
@@ -365,12 +367,19 @@ func (s *NginxService) GetNginxLogs(limit int) ([]NginxLog, error) {
 		if log := parseNginxLogLine(line); log != nil {
 			logs = append([]NginxLog{*log}, logs...)
 			count++
+			
+			// 保存到数据库
+			if err := s.saveNginxLogToDatabase(log, line); err != nil {
+				fmt.Printf("警告: 保存Nginx日志到数据库失败: %v\n", err)
+			} else {
+				savedCount++
+			}
 		}
 		parsed++
 	}
 	
 	// 记录解析结果
-	fmt.Printf("Nginx日志解析完成: 读取%d行，解析成功%d条，文件: %s\n", parsed, count, accessLogPath)
+	fmt.Printf("Nginx日志解析完成: 读取%d行，解析成功%d条，保存到数据库%d条，文件: %s\n", parsed, count, savedCount, accessLogPath)
 
 	return logs, nil
 }
@@ -540,4 +549,212 @@ func parseNginxLogLine(line string) *NginxLog {
 	}
 	
 	return nil
+}
+
+// saveNginxLogToDatabase 保存Nginx日志到数据库
+func (s *NginxService) saveNginxLogToDatabase(log *NginxLog, rawLog string) error {
+	// 确定状态
+	status := "success"
+	isThreat := false
+	threatLevel := "low"
+	
+	if log.IsBlocked || log.StatusCode >= 400 {
+		status = "failed"
+	}
+	
+	// 根据攻击类型判断威胁级别
+	if log.AttackType != "" {
+		isThreat = true
+		switch log.AttackType {
+		case "SQL注入", "命令注入", "代码注入", "远程文件包含", "本地文件包含":
+			threatLevel = "critical"
+		case "XSS攻击", "路径遍历", "SSRF", "XXE攻击", "反序列化漏洞":
+			threatLevel = "high"
+		case "暴力破解", "扫描行为", "恶意爬虫":
+			threatLevel = "medium"
+		default:
+			threatLevel = "low"
+		}
+	}
+	
+	// 创建access_log记录
+	accessLog := struct {
+		ServiceType string
+		IPAddress   string
+		Username    string
+		Event       string
+		Status      string
+		Method      string
+		Path        string
+		StatusCode  int
+		UserAgent   string
+		Referer     string
+		BytesSent   int64
+		RequestTime float64
+		Country     string
+		City        string
+		Latitude    float64
+		Longitude   float64
+		IsThreat    bool
+		ThreatLevel string
+		RawLog      string
+		LogTime     time.Time
+	}{
+		ServiceType: "nginx",
+		IPAddress:   log.IP,
+		Username:    "",
+		Event:       log.AttackType,
+		Status:      status,
+		Method:      log.Method,
+		Path:        log.URL,
+		StatusCode:  log.StatusCode,
+		UserAgent:   log.UserAgent,
+		Referer:     "",
+		BytesSent:   0,
+		RequestTime: 0,
+		Country:     "",
+		City:        "",
+		Latitude:    0,
+		Longitude:   0,
+		IsThreat:    isThreat,
+		ThreatLevel: threatLevel,
+		RawLog:      rawLog,
+		LogTime:     log.Timestamp,
+	}
+	
+	if err := s.db.Table("access_logs").Create(&accessLog).Error; err != nil {
+		return fmt.Errorf("保存日志失败: %w", err)
+	}
+	
+	// 更新IP统计
+	if err := s.updateIPStatistics(log); err != nil {
+		return fmt.Errorf("更新IP统计失败: %w", err)
+	}
+	
+	return nil
+}
+
+// updateIPStatistics 更新IP统计信息
+func (s *NginxService) updateIPStatistics(log *NginxLog) error {
+	var ipStat struct {
+		IPAddress       string
+		TotalRequests   int
+		FailedRequests  int
+		SuccessRequests int
+		SSHAttempts     int
+		HTTPRequests    int
+		LastSeen        time.Time
+		FirstSeen       time.Time
+		Country         string
+		IsBanned        bool
+		BanCount        int
+		ThreatScore     int
+		IsWhitelisted   bool
+		Notes           string
+	}
+	
+	// 查询或创建IP统计记录
+	result := s.db.Table("ip_statistics").Where("ip_address = ?", log.IP).First(&ipStat)
+	
+	if result.Error != nil {
+		// 记录不存在，创建新记录
+		if result.Error.Error() == "record not found" {
+			ipStat = struct {
+				IPAddress       string
+				TotalRequests   int
+				FailedRequests  int
+				SuccessRequests int
+				SSHAttempts     int
+				HTTPRequests    int
+				LastSeen        time.Time
+				FirstSeen       time.Time
+				Country         string
+				IsBanned        bool
+				BanCount        int
+				ThreatScore     int
+				IsWhitelisted   bool
+				Notes           string
+			}{
+				IPAddress:       log.IP,
+				TotalRequests:   1,
+				FailedRequests:  0,
+				SuccessRequests: 0,
+				SSHAttempts:     0,
+				HTTPRequests:    1,
+				LastSeen:        log.Timestamp,
+				FirstSeen:       log.Timestamp,
+				Country:         "",
+				IsBanned:        false,
+				BanCount:        0,
+				ThreatScore:     0,
+				IsWhitelisted:   false,
+				Notes:           "",
+			}
+			
+			// 根据日志状态更新计数
+			if log.IsBlocked || log.StatusCode >= 400 {
+				ipStat.FailedRequests = 1
+			} else {
+				ipStat.SuccessRequests = 1
+			}
+			
+			// 根据攻击类型增加威胁分数
+			if log.AttackType != "" {
+				switch log.AttackType {
+				case "SQL注入", "命令注入", "代码注入", "远程文件包含", "本地文件包含":
+					ipStat.ThreatScore += 50
+				case "XSS攻击", "路径遍历", "SSRF", "XXE攻击", "反序列化漏洞":
+					ipStat.ThreatScore += 30
+				case "暴力破解", "扫描行为", "恶意爬虫":
+					ipStat.ThreatScore += 10
+				default:
+					ipStat.ThreatScore += 5
+				}
+			}
+			
+			// 确保威胁分数不超过100
+			if ipStat.ThreatScore > 100 {
+				ipStat.ThreatScore = 100
+			}
+			
+			return s.db.Table("ip_statistics").Create(&ipStat).Error
+		}
+		return result.Error
+	}
+	
+	// 更新现有记录
+	updates := map[string]interface{}{
+		"total_requests": ipStat.TotalRequests + 1,
+		"http_requests":  ipStat.HTTPRequests + 1,
+		"last_seen":      log.Timestamp,
+	}
+	
+	// 更新成功/失败计数
+	if log.IsBlocked || log.StatusCode >= 400 {
+		updates["failed_requests"] = ipStat.FailedRequests + 1
+	} else {
+		updates["success_requests"] = ipStat.SuccessRequests + 1
+	}
+	
+	// 根据攻击类型增加威胁分数
+	if log.AttackType != "" {
+		newThreatScore := ipStat.ThreatScore
+		switch log.AttackType {
+		case "SQL注入", "命令注入", "代码注入", "远程文件包含", "本地文件包含":
+			newThreatScore += 50
+		case "XSS攻击", "路径遍历", "SSRF", "XXE攻击", "反序列化漏洞":
+			newThreatScore += 30
+		case "暴力破解", "扫描行为", "恶意爬虫":
+			newThreatScore += 10
+		default:
+			newThreatScore += 5
+		}
+		
+		if newThreatScore > 100 {
+			newThreatScore = 100
+		}
+		updates["threat_score"] = newThreatScore
+	}
+	
+	return s.db.Table("ip_statistics").Where("ip_address = ?", log.IP).Updates(updates).Error
 }
